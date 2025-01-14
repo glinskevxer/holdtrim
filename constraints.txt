@@ -1,0 +1,20 @@
+# Exactly what CI installs, transitive dependencies included.
+# Regenerate with:
+#
+#   python -m pip install -e ".[dev]" && python -m pip freeze --exclude-editable
+#
+# The direct pins live in pyproject.toml; this file is the closure of them, so
+# that a build next year installs what a build today installed. A patch bump in
+# something we never asked for is not a change this package wants to discover
+# from a red CI run.
+click==8.1.8
+coverage==7.6.10
+iniconfig==2.0.0
+mypy==1.14.1
+mypy_extensions==1.0.0
+packaging==24.2
+pluggy==1.5.0
+pytest==8.3.4
+pytest-cov==6.0.0
+ruff==0.9.2
+typing_extensions==4.12.2
