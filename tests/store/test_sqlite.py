@@ -12,6 +12,7 @@ from holdtrim.store.sqlite import (
     opened,
     rows,
     scalar,
+    scalar_int,
     table_names,
     transaction,
 )
@@ -112,6 +113,18 @@ def test_a_book_with_no_dangling_references_reports_none(book: Path) -> None:
     with opened(book) as conn:
         conn.execute("CREATE TABLE parent (id INTEGER PRIMARY KEY)")
         assert broken_references(conn) == []
+
+
+def test_a_count_reads_back_as_a_whole_number(book: Path) -> None:
+    with opened(book) as conn:
+        conn.execute("CREATE TABLE t (a INTEGER)")
+        assert scalar_int(conn, "SELECT count(*) FROM t") == 0
+        assert scalar_int(conn, "SELECT max(a) FROM t") == 0
+
+
+def test_a_count_that_is_not_a_number_is_a_book_error(book: Path) -> None:
+    with opened(book) as conn, pytest.raises(BookError, match="expected a whole number"):
+        scalar_int(conn, "SELECT 'plenty'")
 
 
 def test_connect_is_available_for_callers_that_close_themselves(book: Path) -> None:

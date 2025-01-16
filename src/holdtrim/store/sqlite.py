@@ -90,6 +90,18 @@ def scalar(connection: sqlite3.Connection, sql: str, parameters: tuple[object, .
     return row[0]
 
 
+def scalar_int(
+    connection: sqlite3.Connection, sql: str, parameters: tuple[object, ...] = ()
+) -> int:
+    """A count or a sum, read as the integer the caller was going to make it."""
+    value = scalar(connection, sql, parameters)
+    if value is None:
+        return 0
+    if not isinstance(value, int):
+        raise BookError(f"expected a whole number from {sql!r}, got {value!r}")
+    return value
+
+
 def table_names(connection: sqlite3.Connection) -> list[str]:
     """Every table in the book, in name order, sqlite's own excluded."""
     found = rows(
