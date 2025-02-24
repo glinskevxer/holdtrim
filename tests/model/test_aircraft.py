@@ -2,8 +2,11 @@ from decimal import Decimal
 
 import pytest
 
-from holdtrim.errors import DataError
+from holdtrim.errors import DataError, NotFoundError
 from holdtrim.model.aircraft import AircraftType, MacGeometry, StructuralLimits
+from holdtrim.model.envelope import Envelope, EnvelopePoint
+from holdtrim.model.hold import HoldLayout
+from holdtrim.model.position import Position
 
 
 def limits() -> StructuralLimits:
@@ -20,6 +23,60 @@ def geometry() -> MacGeometry:
         index_constant=Decimal("1000"),
         index_reference=Decimal("50"),
     )
+
+
+def layout() -> HoldLayout:
+    return HoldLayout(
+        positions=(
+            Position(
+                code="11P",
+                compartment="MAIN",
+                arm=Decimal("9.400"),
+                max_weight=3175,
+                length=Decimal("3.175"),
+                width=Decimal("2.235"),
+                max_running_load=1200,
+                max_area_load=732,
+                accepts=("PMC",),
+            ),
+            Position(
+                code="21P",
+                compartment="MAIN",
+                arm=Decimal("12.600"),
+                max_weight=3175,
+                length=Decimal("3.175"),
+                width=Decimal("2.235"),
+                max_running_load=1200,
+                max_area_load=732,
+                accepts=("PMC",),
+            ),
+        )
+    )
+
+
+def envelopes() -> tuple[Envelope, ...]:
+    shape = (
+        EnvelopePoint(weight=13000, forward_index=Decimal("38"), aft_index=Decimal("62")),
+        EnvelopePoint(weight=20800, forward_index=Decimal("46"), aft_index=Decimal("57")),
+    )
+    return (
+        Envelope(name="zero fuel", points=shape),
+        Envelope(name="takeoff", points=shape),
+        Envelope(name="landing", points=shape),
+    )
+
+
+def a_type(**changes: object) -> AircraftType:
+    fields: dict[str, object] = {
+        "code": "AT7F",
+        "name": "ATR 72 freighter",
+        "limits": limits(),
+        "geometry": geometry(),
+        "layout": layout(),
+        "envelopes": envelopes(),
+    }
+    fields.update(changes)
+    return AircraftType(**fields)  # type: ignore[arg-type]
 
 
 def test_the_four_certificate_weights_come_back_by_name() -> None:
@@ -91,42 +148,55 @@ def test_an_index_constant_of_zero_is_refused() -> None:
 
 
 def test_a_type_normalises_its_code() -> None:
-    kind = AircraftType(code="at7f", name="ATR 72 freighter", limits=limits(), geometry=geometry())
-    assert kind.code == "AT7F"
+    assert a_type(code="at7f").code == "AT7F"
 
 
 def test_a_type_code_of_the_wrong_shape_is_refused() -> None:
     with pytest.raises(DataError, match="three to five letters"):
-        AircraftType(code="AT", name="ATR 72", limits=limits(), geometry=geometry())
+        a_type(code="AT")
 
 
 def test_a_type_with_no_name_is_refused() -> None:
     with pytest.raises(DataError, match="has no name"):
-        AircraftType(code="AT7F", name="  ", limits=limits(), geometry=geometry())
+        a_type(name="  ")
 
 
 def test_structural_payload_is_zero_fuel_weight_less_the_empty_weight() -> None:
-    kind = AircraftType(
-        code="AT7F",
-        name="ATR 72 freighter",
-        limits=limits(),
-        geometry=geometry(),
-        empty_weight=13100,
-    )
-    assert kind.structural_payload == 7700
+    assert a_type(empty_weight=13100).structural_payload == 7700
 
 
 def test_a_type_heavier_empty_than_its_zero_fuel_weight_is_refused() -> None:
     with pytest.raises(DataError, match="weighs more empty"):
-        AircraftType(
-            code="AT7F",
-            name="ATR 72 freighter",
-            limits=limits(),
-            geometry=geometry(),
-            empty_weight=21000,
-        )
+        a_type(empty_weight=21000)
 
 
 def test_a_type_describes_itself_in_one_line() -> None:
-    kind = AircraftType(code="AT7F", name="ATR 72 freighter", limits=limits(), geometry=geometry())
-    assert kind.describe() == "AT7F ATR 72 freighter MZFW 20800 kg"
+    assert a_type().describe() == "AT7F ATR 72 freighter MZFW 20800 kg 2 positions"
+
+
+def test_the_three_envelopes_come_back_by_name() -> None:
+    assert a_type().envelope("takeoff").name == "takeoff"
+    assert a_type().envelope("ZERO FUEL").name == "zero fuel"
+
+
+def test_asking_for_an_envelope_the_type_has_not_got() -> None:
+    with pytest.raises(NotFoundError, match="no ferry envelope"):
+        a_type().envelope("ferry")
+
+
+def test_a_type_missing_the_landing_envelope_is_refused() -> None:
+    with pytest.raises(DataError, match="has no landing envelope"):
+        a_type(envelopes=envelopes()[:2])
+
+
+def test_a_type_carrying_the_same_envelope_twice_is_refused() -> None:
+    with pytest.raises(DataError, match="same envelope twice"):
+        a_type(envelopes=(*envelopes(), envelopes()[0]))
+
+
+def test_the_floor_can_take_more_than_the_certificate_allows() -> None:
+    assert a_type(empty_weight=14500).positions_hold_more_than_the_certificate
+
+
+def test_a_light_type_with_a_small_layout_does_not_outrun_its_certificate() -> None:
+    assert not a_type(empty_weight=13100).positions_hold_more_than_the_certificate

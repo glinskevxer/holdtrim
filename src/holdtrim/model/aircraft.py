@@ -17,7 +17,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal
 
-from holdtrim.errors import DataError
+from holdtrim.errors import DataError, NotFoundError
+from holdtrim.model.envelope import LANDING, TAKEOFF, ZERO_FUEL, Envelope
+from holdtrim.model.hold import HoldLayout
 from holdtrim.units import to_index, to_kilos, to_metres
 
 TYPE_CODE_LENGTH = (3, 5)
@@ -97,12 +99,20 @@ class MacGeometry:
 
 @dataclass(frozen=True)
 class AircraftType:
-    """A type of aeroplane and the schedule its loads are worked out on."""
+    """A type of aeroplane and the schedule its loads are worked out on.
+
+    The layout and the envelopes are part of the type, not of the aeroplane.
+    Two tails of the same type are loaded into the same positions and checked
+    against the same shape. What differs between them is what they weigh, and
+    that lives on the tail.
+    """
 
     code: str
     name: str
     limits: StructuralLimits
     geometry: MacGeometry
+    layout: HoldLayout
+    envelopes: tuple[Envelope, ...]
     empty_weight: int = 0
 
     def __post_init__(self) -> None:
@@ -118,12 +128,39 @@ class AircraftType:
         object.__setattr__(self, "empty_weight", to_kilos(self.empty_weight, what="empty weight"))
         if self.empty_weight and self.empty_weight >= self.limits.max_zero_fuel:
             raise DataError(f"type {code} weighs more empty than its max zero fuel weight")
+        names = [envelope.name for envelope in self.envelopes]
+        if len(set(names)) != len(names):
+            raise DataError(f"type {code} carries the same envelope twice")
+        for required in (ZERO_FUEL, TAKEOFF, LANDING):
+            if required not in names:
+                raise DataError(f"type {code} has no {required} envelope")
 
     @property
     def structural_payload(self) -> int:
         """The most payload the certificate allows, before any fuel."""
         return self.limits.max_zero_fuel - self.empty_weight
 
+    @property
+    def positions_hold_more_than_the_certificate(self) -> bool:
+        """True where the floor could take more than the weights allow.
+
+        This is the normal case on a freighter and it is not a fault. It is
+        worth knowing because it means a plan can pass every position check
+        and still be too heavy.
+        """
+        return self.layout.capacity > self.structural_payload
+
+    def envelope(self, name: str) -> Envelope:
+        """One certified envelope by name."""
+        wanted = name.strip().lower()
+        for envelope in self.envelopes:
+            if envelope.name == wanted:
+                return envelope
+        raise NotFoundError(f"type {self.code} has no {wanted} envelope")
+
     def describe(self) -> str:
         """One line for a fleet listing."""
-        return f"{self.code} {self.name} MZFW {self.limits.max_zero_fuel} kg"
+        return (
+            f"{self.code} {self.name} MZFW {self.limits.max_zero_fuel} kg "
+            f"{len(self.layout.positions)} positions"
+        )
