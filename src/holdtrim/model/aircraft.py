@@ -131,6 +131,9 @@ class AircraftType:
         names = [envelope.name for envelope in self.envelopes]
         if len(set(names)) != len(names):
             raise DataError(f"type {code} carries the same envelope twice")
+        object.__setattr__(
+            self, "envelopes", tuple(sorted(self.envelopes, key=lambda shape: shape.name))
+        )
         for required in (ZERO_FUEL, TAKEOFF, LANDING):
             if required not in names:
                 raise DataError(f"type {code} has no {required} envelope")

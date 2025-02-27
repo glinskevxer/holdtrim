@@ -189,6 +189,12 @@ def test_a_type_missing_the_landing_envelope_is_refused() -> None:
         a_type(envelopes=envelopes()[:2])
 
 
+def test_the_envelopes_come_back_in_name_order_however_they_went_in() -> None:
+    shuffled = tuple(reversed(envelopes()))
+    names = [shape.name for shape in a_type(envelopes=shuffled).envelopes]
+    assert names == ["landing", "takeoff", "zero fuel"]
+
+
 def test_a_type_carrying_the_same_envelope_twice_is_refused() -> None:
     with pytest.raises(DataError, match="same envelope twice"):
         a_type(envelopes=(*envelopes(), envelopes()[0]))

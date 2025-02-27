@@ -42,6 +42,64 @@ MIGRATIONS: tuple[Migration, ...] = (
             "CREATE INDEX station_by_name ON station (name)",
         ),
     ),
+    Migration(
+        version=2,
+        name="fleet",
+        statements=(
+            """
+            CREATE TABLE aircraft_type (
+                code TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                max_ramp INTEGER NOT NULL,
+                max_takeoff INTEGER NOT NULL,
+                max_landing INTEGER NOT NULL,
+                max_zero_fuel INTEGER NOT NULL,
+                reference_arm TEXT NOT NULL,
+                lemac TEXT NOT NULL,
+                mac_length TEXT NOT NULL,
+                index_constant TEXT NOT NULL,
+                index_reference TEXT NOT NULL,
+                empty_weight INTEGER NOT NULL DEFAULT 0
+            )
+            """,
+            """
+            CREATE TABLE hold_position (
+                type_code TEXT NOT NULL REFERENCES aircraft_type (code) ON DELETE CASCADE,
+                code TEXT NOT NULL,
+                ordinal INTEGER NOT NULL,
+                compartment TEXT NOT NULL,
+                arm TEXT NOT NULL,
+                max_weight INTEGER NOT NULL,
+                length TEXT NOT NULL,
+                width TEXT NOT NULL,
+                max_running_load INTEGER NOT NULL,
+                max_area_load INTEGER NOT NULL,
+                accepts TEXT NOT NULL DEFAULT '',
+                PRIMARY KEY (type_code, code)
+            )
+            """,
+            """
+            CREATE TABLE cumulative_limit (
+                type_code TEXT NOT NULL REFERENCES aircraft_type (code) ON DELETE CASCADE,
+                label TEXT NOT NULL,
+                max_weight INTEGER NOT NULL,
+                positions TEXT NOT NULL,
+                PRIMARY KEY (type_code, label)
+            )
+            """,
+            """
+            CREATE TABLE envelope_point (
+                type_code TEXT NOT NULL REFERENCES aircraft_type (code) ON DELETE CASCADE,
+                envelope TEXT NOT NULL,
+                weight INTEGER NOT NULL,
+                forward_index TEXT NOT NULL,
+                aft_index TEXT NOT NULL,
+                PRIMARY KEY (type_code, envelope, weight)
+            )
+            """,
+            "CREATE INDEX hold_position_by_type ON hold_position (type_code, ordinal)",
+        ),
+    ),
 )
 
 
