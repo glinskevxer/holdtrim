@@ -100,6 +100,25 @@ MIGRATIONS: tuple[Migration, ...] = (
             "CREATE INDEX hold_position_by_type ON hold_position (type_code, ordinal)",
         ),
     ),
+    Migration(
+        version=3,
+        name="tails",
+        statements=(
+            """
+            CREATE TABLE tail (
+                registration TEXT PRIMARY KEY,
+                type_code TEXT NOT NULL REFERENCES aircraft_type (code),
+                dry_operating_weight INTEGER NOT NULL,
+                dry_operating_index TEXT NOT NULL,
+                weighed_on TEXT NOT NULL,
+                serial_number TEXT NOT NULL DEFAULT '',
+                status TEXT NOT NULL,
+                weighing_valid_months INTEGER NOT NULL
+            )
+            """,
+            "CREATE INDEX tail_by_type ON tail (type_code)",
+        ),
+    ),
 )
 
 

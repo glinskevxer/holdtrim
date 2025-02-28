@@ -25,7 +25,7 @@ def test_opening_a_book_that_is_not_there_says_to_run_init(tmp_path: Path) -> No
 def test_opening_with_create_makes_one(tmp_path: Path) -> None:
     path = tmp_path / "book.sqlite3"
     with open_book(path, create=True) as book:
-        assert book.counts() == {"station": 0, "aircraft_type": 0}
+        assert book.counts() == {"station": 0, "aircraft_type": 0, "tail": 0}
     assert path.exists()
 
 

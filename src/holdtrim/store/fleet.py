@@ -9,13 +9,16 @@ arithmetic matches the paper.
 from __future__ import annotations
 
 import sqlite3
+from datetime import date
 from decimal import Decimal
 
-from holdtrim.errors import DuplicateError, NotFoundError
+from holdtrim.errors import DuplicateError, NotFoundError, StateError
+from holdtrim.ids import parse_registration
 from holdtrim.model.aircraft import AircraftType, MacGeometry, StructuralLimits
 from holdtrim.model.envelope import Envelope, EnvelopePoint
 from holdtrim.model.hold import CumulativeLimit, HoldLayout
 from holdtrim.model.position import Position
+from holdtrim.model.tail import Tail
 from holdtrim.store.sqlite import one, rows, scalar_int, transaction
 
 ACCEPTS_SEPARATOR = "/"
@@ -214,3 +217,128 @@ def remove_type(connection: sqlite3.Connection, code: str) -> None:
 def count_types(connection: sqlite3.Connection) -> int:
     """How many types are registered."""
     return scalar_int(connection, "SELECT count(*) FROM aircraft_type")
+
+
+TAIL_COLUMNS = (
+    "registration, type_code, dry_operating_weight, dry_operating_index, "
+    "weighed_on, serial_number, status, weighing_valid_months"
+)
+
+
+def _tail(row: sqlite3.Row) -> Tail:
+    return Tail(
+        registration=str(row["registration"]),
+        type_code=str(row["type_code"]),
+        dry_operating_weight=int(row["dry_operating_weight"]),
+        dry_operating_index=Decimal(str(row["dry_operating_index"])),
+        weighed_on=date.fromisoformat(str(row["weighed_on"])),
+        serial_number=str(row["serial_number"]),
+        status=str(row["status"]),
+        weighing_valid_months=int(row["weighing_valid_months"]),
+    )
+
+
+def tail_exists(connection: sqlite3.Connection, registration: str) -> bool:
+    """Whether a registration is on the fleet."""
+    wanted = parse_registration(registration)
+    sql = "SELECT count(*) FROM tail WHERE registration = ?"
+    return scalar_int(connection, sql, (wanted,)) > 0
+
+
+def add_tail(connection: sqlite3.Connection, aeroplane: Tail) -> Tail:
+    """Put an aeroplane on the fleet, refusing a type that is not registered."""
+    if tail_exists(connection, aeroplane.registration):
+        raise DuplicateError(f"{aeroplane.registration} is already on the fleet")
+    if not type_exists(connection, aeroplane.type_code):
+        raise StateError(
+            f"{aeroplane.registration} is a {aeroplane.type_code} and that type "
+            "is not in the fleet register yet"
+        )
+    with transaction(connection):
+        connection.execute(
+            f"INSERT INTO tail ({TAIL_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                aeroplane.registration,
+                aeroplane.type_code,
+                aeroplane.dry_operating_weight,
+                str(aeroplane.dry_operating_index),
+                aeroplane.weighed_on.isoformat(),
+                aeroplane.serial_number,
+                aeroplane.status,
+                aeroplane.weighing_valid_months,
+            ),
+        )
+    return aeroplane
+
+
+def get_tail(connection: sqlite3.Connection, registration: str) -> Tail:
+    """One aeroplane by registration."""
+    wanted = parse_registration(registration)
+    row = one(connection, f"SELECT {TAIL_COLUMNS} FROM tail WHERE registration = ?", (wanted,))
+    if row is None:
+        raise NotFoundError(f"no aeroplane {wanted} on the fleet")
+    return _tail(row)
+
+
+def list_tails(connection: sqlite3.Connection) -> list[Tail]:
+    """Every aeroplane, in registration order."""
+    found = rows(connection, f"SELECT {TAIL_COLUMNS} FROM tail ORDER BY registration")
+    return [_tail(row) for row in found]
+
+
+def tails_of_type(connection: sqlite3.Connection, code: str) -> list[Tail]:
+    """Every aeroplane of one type."""
+    wanted = code.strip().upper()
+    found = rows(
+        connection,
+        f"SELECT {TAIL_COLUMNS} FROM tail WHERE type_code = ? ORDER BY registration",
+        (wanted,),
+    )
+    return [_tail(row) for row in found]
+
+
+def save_tail(connection: sqlite3.Connection, aeroplane: Tail) -> Tail:
+    """Overwrite an aeroplane that is already on the fleet."""
+    if not tail_exists(connection, aeroplane.registration):
+        raise NotFoundError(f"no aeroplane {aeroplane.registration} on the fleet")
+    with transaction(connection):
+        connection.execute(
+            "UPDATE tail SET type_code = ?, dry_operating_weight = ?, dry_operating_index = ?, "
+            "weighed_on = ?, serial_number = ?, status = ?, weighing_valid_months = ? "
+            "WHERE registration = ?",
+            (
+                aeroplane.type_code,
+                aeroplane.dry_operating_weight,
+                str(aeroplane.dry_operating_index),
+                aeroplane.weighed_on.isoformat(),
+                aeroplane.serial_number,
+                aeroplane.status,
+                aeroplane.weighing_valid_months,
+                aeroplane.registration,
+            ),
+        )
+    return aeroplane
+
+
+def remove_tail(connection: sqlite3.Connection, registration: str) -> None:
+    """Take an aeroplane off the fleet."""
+    wanted = parse_registration(registration)
+    if not tail_exists(connection, wanted):
+        raise NotFoundError(f"no aeroplane {wanted} on the fleet")
+    with transaction(connection):
+        connection.execute("DELETE FROM tail WHERE registration = ?", (wanted,))
+
+
+def count_tails(connection: sqlite3.Connection) -> int:
+    """How many aeroplanes are on the fleet."""
+    return scalar_int(connection, "SELECT count(*) FROM tail")
+
+
+def weighings_due(connection: sqlite3.Connection, on: date, *, within_days: int = 90) -> list[Tail]:
+    """Aeroplanes whose weighing has expired or is about to, soonest first."""
+    due = [
+        aeroplane
+        for aeroplane in list_tails(connection)
+        if aeroplane.days_of_weighing_left(on) <= within_days
+    ]
+    return sorted(due, key=lambda aeroplane: (aeroplane.weighing_expires, aeroplane.registration))
