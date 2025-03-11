@@ -8,7 +8,14 @@ from pathlib import Path
 import click
 
 from holdtrim import __version__
-from holdtrim.cli.common import DEFAULT_BOOK, Settings, exit_code_for, opened_book, settings
+from holdtrim.cli import stations
+from holdtrim.cli.common import (
+    DEFAULT_BOOK,
+    Settings,
+    exit_code_for,
+    opened_book,
+    settings,
+)
 from holdtrim.errors import HoldtrimError
 from holdtrim.store.book import initialise
 
@@ -83,6 +90,9 @@ def book_backup(ctx: click.Context, destination: Path) -> None:
     with opened_book(ctx) as opened:
         opened.backup(destination)
     click.echo(f"copied to {destination}")
+
+
+cli.add_command(stations.group)
 
 
 def run() -> None:
