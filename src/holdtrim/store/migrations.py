@@ -119,6 +119,30 @@ MIGRATIONS: tuple[Migration, ...] = (
             "CREATE INDEX tail_by_type ON tail (type_code)",
         ),
     ),
+    Migration(
+        version=4,
+        name="consignments",
+        statements=(
+            """
+            CREATE TABLE consignment (
+                awb TEXT PRIMARY KEY,
+                prefix TEXT NOT NULL,
+                serial INTEGER NOT NULL,
+                origin TEXT NOT NULL,
+                destination TEXT NOT NULL,
+                pieces INTEGER NOT NULL,
+                gross_weight INTEGER NOT NULL,
+                volume TEXT NOT NULL,
+                commodity TEXT NOT NULL,
+                ready_on TEXT NOT NULL,
+                shipper TEXT NOT NULL DEFAULT '',
+                consignee TEXT NOT NULL DEFAULT '',
+                handling TEXT NOT NULL DEFAULT ''
+            )
+            """,
+            "CREATE INDEX consignment_by_route ON consignment (origin, destination, ready_on)",
+        ),
+    ),
 )
 
 

@@ -48,6 +48,7 @@ def test_counts_lists_the_empty_tables(runner: CliRunner, book: Path) -> None:
     result = run(runner, book, "book", "counts")
     assert "station 0" in result.output
     assert "tail 0" in result.output
+    assert "consignment 0" in result.output
 
 
 def test_verify_says_a_fresh_book_is_sound(runner: CliRunner, book: Path) -> None:
