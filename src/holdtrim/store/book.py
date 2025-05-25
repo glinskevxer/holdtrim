@@ -29,7 +29,7 @@ from holdtrim.store.sqlite import (
     table_names,
 )
 
-COUNTED_TABLES = ("station", "aircraft_type", "tail", "consignment")
+COUNTED_TABLES = ("station", "aircraft_type", "tail", "consignment", "uld")
 
 
 @dataclass

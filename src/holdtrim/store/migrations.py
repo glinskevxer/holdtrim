@@ -143,6 +143,26 @@ MIGRATIONS: tuple[Migration, ...] = (
             "CREATE INDEX consignment_by_route ON consignment (origin, destination, ready_on)",
         ),
     ),
+    Migration(
+        version=5,
+        name="ulds",
+        statements=(
+            """
+            CREATE TABLE uld (
+                code TEXT PRIMARY KEY,
+                type_code TEXT NOT NULL,
+                serial TEXT NOT NULL,
+                owner TEXT NOT NULL,
+                tare INTEGER NOT NULL,
+                max_gross INTEGER NOT NULL,
+                at_station TEXT NOT NULL DEFAULT '',
+                condition TEXT NOT NULL,
+                contour TEXT NOT NULL
+            )
+            """,
+            "CREATE INDEX uld_by_station ON uld (at_station, type_code)",
+        ),
+    ),
 )
 
 

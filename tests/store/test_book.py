@@ -30,6 +30,7 @@ def test_opening_with_create_makes_one(tmp_path: Path) -> None:
             "aircraft_type": 0,
             "tail": 0,
             "consignment": 0,
+            "uld": 0,
         }
     assert path.exists()
 
