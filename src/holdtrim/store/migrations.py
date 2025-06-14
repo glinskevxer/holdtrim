@@ -163,6 +163,32 @@ MIGRATIONS: tuple[Migration, ...] = (
             "CREATE INDEX uld_by_station ON uld (at_station, type_code)",
         ),
     ),
+    Migration(
+        version=6,
+        name="sectors",
+        statements=(
+            """
+            CREATE TABLE sector (
+                key TEXT PRIMARY KEY,
+                carrier TEXT NOT NULL,
+                number INTEGER NOT NULL,
+                suffix TEXT NOT NULL DEFAULT '',
+                day TEXT NOT NULL,
+                registration TEXT NOT NULL REFERENCES tail (registration),
+                origin TEXT NOT NULL,
+                destination TEXT NOT NULL,
+                taxi_fuel INTEGER NOT NULL,
+                trip_fuel INTEGER NOT NULL,
+                takeoff_fuel INTEGER NOT NULL,
+                crew INTEGER NOT NULL,
+                freighter INTEGER NOT NULL,
+                status TEXT NOT NULL
+            )
+            """,
+            "CREATE INDEX sector_by_day ON sector (day, carrier, number)",
+            "CREATE INDEX sector_by_tail ON sector (registration, day)",
+        ),
+    ),
 )
 
 
