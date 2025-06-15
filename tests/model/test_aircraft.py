@@ -2,6 +2,7 @@ from decimal import Decimal
 
 import pytest
 
+from holdtrim.balance.fuel import FuelPoint, FuelTable
 from holdtrim.errors import DataError, NotFoundError
 from holdtrim.model.aircraft import AircraftType, MacGeometry, StructuralLimits
 from holdtrim.model.envelope import Envelope, EnvelopePoint
@@ -74,6 +75,12 @@ def a_type(**changes: object) -> AircraftType:
         "geometry": geometry(),
         "layout": layout(),
         "envelopes": envelopes(),
+        "fuel": FuelTable(
+            points=(
+                FuelPoint(weight=0, index=Decimal("0.0")),
+                FuelPoint(weight=4500, index=Decimal("1.2")),
+            )
+        ),
     }
     fields.update(changes)
     return AircraftType(**fields)  # type: ignore[arg-type]
@@ -172,6 +179,10 @@ def test_a_type_heavier_empty_than_its_zero_fuel_weight_is_refused() -> None:
 
 def test_a_type_describes_itself_in_one_line() -> None:
     assert a_type().describe() == "AT7F ATR 72 freighter MZFW 20800 kg 2 positions"
+
+
+def test_the_usable_fuel_is_the_end_of_the_fuel_table() -> None:
+    assert a_type().usable_fuel == 4500
 
 
 def test_the_three_envelopes_come_back_by_name() -> None:

@@ -12,6 +12,7 @@ import sqlite3
 from datetime import date
 from decimal import Decimal
 
+from holdtrim.balance.fuel import FuelPoint, FuelTable
 from holdtrim.errors import DuplicateError, NotFoundError, StateError
 from holdtrim.ids import parse_registration
 from holdtrim.model.aircraft import AircraftType, MacGeometry, StructuralLimits
@@ -102,6 +103,20 @@ def _envelopes(connection: sqlite3.Connection, code: str) -> tuple[Envelope, ...
     )
 
 
+def _fuel(connection: sqlite3.Connection, code: str) -> FuelTable:
+    found = rows(
+        connection,
+        "SELECT weight, fuel_index FROM fuel_point WHERE type_code = ? ORDER BY weight",
+        (code,),
+    )
+    return FuelTable(
+        points=tuple(
+            FuelPoint(weight=int(row["weight"]), index=Decimal(str(row["fuel_index"])))
+            for row in found
+        )
+    )
+
+
 def type_exists(connection: sqlite3.Connection, code: str) -> bool:
     """Whether a type code is registered."""
     wanted = code.strip().upper()
@@ -164,6 +179,11 @@ def add_type(connection: sqlite3.Connection, kind: AircraftType) -> AircraftType
                     ACCEPTS_SEPARATOR.join(limit.positions),
                 ),
             )
+        for row in kind.fuel.points:
+            connection.execute(
+                "INSERT INTO fuel_point (type_code, weight, fuel_index) VALUES (?, ?, ?)",
+                (kind.code, row.weight, str(row.index)),
+            )
         for envelope in kind.envelopes:
             for point in envelope.points:
                 connection.execute(
@@ -193,6 +213,7 @@ def get_type(connection: sqlite3.Connection, code: str) -> AircraftType:
         geometry=_geometry(row),
         layout=_layout(connection, wanted),
         envelopes=_envelopes(connection, wanted),
+        fuel=_fuel(connection, wanted),
         empty_weight=int(row["empty_weight"]),
     )
 

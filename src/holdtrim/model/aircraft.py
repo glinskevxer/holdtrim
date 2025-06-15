@@ -17,6 +17,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal
 
+from holdtrim.balance.fuel import FuelTable
 from holdtrim.errors import DataError, NotFoundError
 from holdtrim.model.envelope import LANDING, TAKEOFF, ZERO_FUEL, Envelope
 from holdtrim.model.hold import HoldLayout
@@ -113,6 +114,7 @@ class AircraftType:
     geometry: MacGeometry
     layout: HoldLayout
     envelopes: tuple[Envelope, ...]
+    fuel: FuelTable
     empty_weight: int = 0
 
     def __post_init__(self) -> None:
@@ -137,6 +139,11 @@ class AircraftType:
         for required in (ZERO_FUEL, TAKEOFF, LANDING):
             if required not in names:
                 raise DataError(f"type {code} has no {required} envelope")
+
+    @property
+    def usable_fuel(self) -> int:
+        """The most fuel the schedule has an index correction for."""
+        return self.fuel.capacity
 
     @property
     def structural_payload(self) -> int:

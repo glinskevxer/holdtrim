@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from holdtrim.balance.fuel import FuelPoint, FuelTable
 from holdtrim.errors import DuplicateError, NotFoundError
 from holdtrim.model.aircraft import AircraftType, MacGeometry, StructuralLimits
 from holdtrim.model.envelope import Envelope, EnvelopePoint
@@ -69,6 +70,15 @@ def a_type(code: str = "AT7F") -> AircraftType:
             Envelope(name="takeoff", points=shape),
             Envelope(name="landing", points=shape),
         ),
+        fuel=FuelTable(
+            points=(
+                FuelPoint(weight=0, index=Decimal("0.0")),
+                FuelPoint(weight=1000, index=Decimal("-2.4")),
+                FuelPoint(weight=2000, index=Decimal("-3.6")),
+                FuelPoint(weight=3000, index=Decimal("-2.8")),
+                FuelPoint(weight=4500, index=Decimal("1.2")),
+            )
+        ),
         empty_weight=13100,
     )
 
@@ -101,6 +111,13 @@ def test_the_cumulative_limits_come_back_with_their_positions(conn: sqlite3.Conn
     assert limits[0].positions == ("11P", "21P")
 
 
+def test_the_fuel_index_table_comes_back(conn: sqlite3.Connection) -> None:
+    fleet.add_type(conn, a_type())
+    read = fleet.get_type(conn, "AT7F")
+    assert read.fuel.capacity == 4500
+    assert read.fuel.index_at(2000) == Decimal("-3.6")
+
+
 def test_all_three_envelopes_come_back(conn: sqlite3.Connection) -> None:
     fleet.add_type(conn, a_type())
     names = [envelope.name for envelope in fleet.get_type(conn, "AT7F").envelopes]
@@ -131,6 +148,7 @@ def test_removing_a_type_takes_its_layout_with_it(conn: sqlite3.Connection) -> N
     assert not fleet.type_exists(conn, "AT7F")
     assert scalar_int(conn, "SELECT count(*) FROM hold_position") == 0
     assert scalar_int(conn, "SELECT count(*) FROM envelope_point") == 0
+    assert scalar_int(conn, "SELECT count(*) FROM fuel_point") == 0
 
 
 def test_removing_a_type_that_is_not_there_is_refused(conn: sqlite3.Connection) -> None:

@@ -189,6 +189,20 @@ MIGRATIONS: tuple[Migration, ...] = (
             "CREATE INDEX sector_by_tail ON sector (registration, day)",
         ),
     ),
+    Migration(
+        version=7,
+        name="fuel index tables",
+        statements=(
+            """
+            CREATE TABLE fuel_point (
+                type_code TEXT NOT NULL REFERENCES aircraft_type (code) ON DELETE CASCADE,
+                weight INTEGER NOT NULL,
+                fuel_index TEXT NOT NULL,
+                PRIMARY KEY (type_code, weight)
+            )
+            """,
+        ),
+    ),
 )
 
 

@@ -16,6 +16,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
+from holdtrim.balance.fuel import FuelPoint, FuelTable
 from holdtrim.errors import DataError
 from holdtrim.model.aircraft import AircraftType, MacGeometry, StructuralLimits
 from holdtrim.model.envelope import Envelope, EnvelopePoint
@@ -129,6 +130,22 @@ def _envelope(name: str, points: object) -> Envelope:
     return Envelope(name=name, points=tuple(read))
 
 
+def _fuel(rows: object) -> FuelTable:
+    where = "the fuel index table"
+    if not isinstance(rows, list) or not rows:
+        raise DataError(f"{where} has no rows")
+    read = []
+    for entry in rows:
+        block = _mapping(entry, where)
+        read.append(
+            FuelPoint(
+                weight=_whole(block, "weight", where),
+                index=_decimal(block, "index", where),
+            )
+        )
+    return FuelTable(points=tuple(read))
+
+
 def read_schedule(text: str) -> AircraftType:
     """Read a weight schedule document into a type."""
     try:
@@ -153,6 +170,7 @@ def read_schedule(text: str) -> AircraftType:
             ),
         ),
         envelopes=tuple(_envelope(name, points) for name, points in sorted(envelopes.items())),
+        fuel=_fuel(_need(document, "fuel", "the schedule")),
         empty_weight=int(document.get("empty_weight", 0)),
     )
 
@@ -193,6 +211,7 @@ def write_schedule(kind: AircraftType) -> str:
             }
             for limit in kind.layout.cumulative
         ],
+        "fuel": [{"weight": point.weight, "index": str(point.index)} for point in kind.fuel.points],
         "envelopes": {
             envelope.name: [
                 {
