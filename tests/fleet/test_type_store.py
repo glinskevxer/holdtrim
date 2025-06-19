@@ -39,8 +39,8 @@ def position(code: str, arm: str, accepts: tuple[str, ...] = ("PMC",)) -> Positi
 
 def a_type(code: str = "AT7F") -> AircraftType:
     shape = (
-        EnvelopePoint(weight=13000, forward_index=Decimal("38.0"), aft_index=Decimal("62.0")),
-        EnvelopePoint(weight=20800, forward_index=Decimal("46.0"), aft_index=Decimal("57.0")),
+        EnvelopePoint(weight=13000, forward_index=Decimal("30.0"), aft_index=Decimal("66.0")),
+        EnvelopePoint(weight=20800, forward_index=Decimal("38.0"), aft_index=Decimal("58.0")),
     )
     return AircraftType(
         code=code,

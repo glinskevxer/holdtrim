@@ -74,7 +74,7 @@ def test_an_envelope_prints_its_breakpoints(runner: CliRunner, book: Path, sched
     prepared(runner, book, schedule)
     result = run(runner, book, "fleet", "envelope", "AT7F", "takeoff")
     assert "13000" in result.output
-    assert "24.0" in result.output
+    assert "36.0" in result.output
 
 
 def test_an_envelope_the_type_has_not_got_raises(
