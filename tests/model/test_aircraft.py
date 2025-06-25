@@ -3,6 +3,7 @@ from decimal import Decimal
 import pytest
 
 from holdtrim.balance.fuel import FuelPoint, FuelTable
+from holdtrim.balance.trim import TrimPoint, TrimTable
 from holdtrim.errors import DataError, NotFoundError
 from holdtrim.model.aircraft import AircraftType, MacGeometry, StructuralLimits
 from holdtrim.model.envelope import Envelope, EnvelopePoint
@@ -79,6 +80,12 @@ def a_type(**changes: object) -> AircraftType:
             points=(
                 FuelPoint(weight=0, index=Decimal("0.0")),
                 FuelPoint(weight=4500, index=Decimal("1.2")),
+            )
+        ),
+        "trim": TrimTable(
+            points=(
+                TrimPoint(percent_mac=Decimal("15.0"), setting=Decimal("5.5")),
+                TrimPoint(percent_mac=Decimal("35.0"), setting=Decimal("1.5")),
             )
         ),
     }

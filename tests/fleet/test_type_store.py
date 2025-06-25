@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from holdtrim.balance.fuel import FuelPoint, FuelTable
+from holdtrim.balance.trim import TrimPoint, TrimTable
 from holdtrim.errors import DuplicateError, NotFoundError
 from holdtrim.model.aircraft import AircraftType, MacGeometry, StructuralLimits
 from holdtrim.model.envelope import Envelope, EnvelopePoint
@@ -79,6 +80,13 @@ def a_type(code: str = "AT7F") -> AircraftType:
                 FuelPoint(weight=4500, index=Decimal("1.2")),
             )
         ),
+        trim=TrimTable(
+            points=(
+                TrimPoint(percent_mac=Decimal("15.0"), setting=Decimal("5.5")),
+                TrimPoint(percent_mac=Decimal("25.0"), setting=Decimal("3.5")),
+                TrimPoint(percent_mac=Decimal("35.0"), setting=Decimal("1.5")),
+            )
+        ),
         empty_weight=13100,
     )
 
@@ -116,6 +124,11 @@ def test_the_fuel_index_table_comes_back(conn: sqlite3.Connection) -> None:
     read = fleet.get_type(conn, "AT7F")
     assert read.fuel.capacity == 4500
     assert read.fuel.index_at(2000) == Decimal("-3.6")
+
+
+def test_the_trim_table_comes_back(conn: sqlite3.Connection) -> None:
+    fleet.add_type(conn, a_type())
+    assert fleet.get_type(conn, "AT7F").trim.setting_at(Decimal("25.0")) == Decimal("3.5")
 
 
 def test_all_three_envelopes_come_back(conn: sqlite3.Connection) -> None:

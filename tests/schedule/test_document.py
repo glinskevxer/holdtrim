@@ -148,6 +148,20 @@ def test_a_fuel_table_with_no_rows_is_refused() -> None:
         read_schedule(json.dumps(broken))
 
 
+def test_a_schedule_with_no_trim_table_is_refused() -> None:
+    broken = document()
+    del broken["trim"]
+    with pytest.raises(DataError, match="missing trim in the schedule"):
+        read_schedule(json.dumps(broken))
+
+
+def test_a_trim_table_with_no_rows_is_refused() -> None:
+    broken = document()
+    broken["trim"] = []
+    with pytest.raises(DataError, match="the trim table has no rows"):
+        read_schedule(json.dumps(broken))
+
+
 def test_a_schedule_that_is_not_on_disk_is_refused(tmp_path: Path) -> None:
     with pytest.raises(DataError, match="no schedule at"):
         load_schedule(tmp_path / "missing.json")

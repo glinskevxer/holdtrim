@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 from holdtrim.balance.fuel import FuelTable
+from holdtrim.balance.trim import TrimTable
 from holdtrim.errors import DataError, NotFoundError
 from holdtrim.model.envelope import LANDING, TAKEOFF, ZERO_FUEL, Envelope
 from holdtrim.model.hold import HoldLayout
@@ -115,6 +116,7 @@ class AircraftType:
     layout: HoldLayout
     envelopes: tuple[Envelope, ...]
     fuel: FuelTable
+    trim: TrimTable
     empty_weight: int = 0
 
     def __post_init__(self) -> None:

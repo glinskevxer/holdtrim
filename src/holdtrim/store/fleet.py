@@ -13,6 +13,7 @@ from datetime import date
 from decimal import Decimal
 
 from holdtrim.balance.fuel import FuelPoint, FuelTable
+from holdtrim.balance.trim import TrimPoint, TrimTable
 from holdtrim.errors import DuplicateError, NotFoundError, StateError
 from holdtrim.ids import parse_registration
 from holdtrim.model.aircraft import AircraftType, MacGeometry, StructuralLimits
@@ -117,6 +118,24 @@ def _fuel(connection: sqlite3.Connection, code: str) -> FuelTable:
     )
 
 
+def _trim(connection: sqlite3.Connection, code: str) -> TrimTable:
+    found = rows(
+        connection,
+        "SELECT percent_mac, setting FROM trim_point WHERE type_code = ? "
+        "ORDER BY cast(percent_mac AS REAL)",
+        (code,),
+    )
+    return TrimTable(
+        points=tuple(
+            TrimPoint(
+                percent_mac=Decimal(str(row["percent_mac"])),
+                setting=Decimal(str(row["setting"])),
+            )
+            for row in found
+        )
+    )
+
+
 def type_exists(connection: sqlite3.Connection, code: str) -> bool:
     """Whether a type code is registered."""
     wanted = code.strip().upper()
@@ -184,6 +203,11 @@ def add_type(connection: sqlite3.Connection, kind: AircraftType) -> AircraftType
                 "INSERT INTO fuel_point (type_code, weight, fuel_index) VALUES (?, ?, ?)",
                 (kind.code, row.weight, str(row.index)),
             )
+        for setting in kind.trim.points:
+            connection.execute(
+                "INSERT INTO trim_point (type_code, percent_mac, setting) VALUES (?, ?, ?)",
+                (kind.code, str(setting.percent_mac), str(setting.setting)),
+            )
         for envelope in kind.envelopes:
             for point in envelope.points:
                 connection.execute(
@@ -214,6 +238,7 @@ def get_type(connection: sqlite3.Connection, code: str) -> AircraftType:
         layout=_layout(connection, wanted),
         envelopes=_envelopes(connection, wanted),
         fuel=_fuel(connection, wanted),
+        trim=_trim(connection, wanted),
         empty_weight=int(row["empty_weight"]),
     )
 

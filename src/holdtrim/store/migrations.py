@@ -203,6 +203,20 @@ MIGRATIONS: tuple[Migration, ...] = (
             """,
         ),
     ),
+    Migration(
+        version=8,
+        name="trim tables",
+        statements=(
+            """
+            CREATE TABLE trim_point (
+                type_code TEXT NOT NULL REFERENCES aircraft_type (code) ON DELETE CASCADE,
+                percent_mac TEXT NOT NULL,
+                setting TEXT NOT NULL,
+                PRIMARY KEY (type_code, percent_mac)
+            )
+            """,
+        ),
+    ),
 )
 
 
