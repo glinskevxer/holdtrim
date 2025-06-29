@@ -217,6 +217,30 @@ MIGRATIONS: tuple[Migration, ...] = (
             """,
         ),
     ),
+    Migration(
+        version=9,
+        name="load plans",
+        statements=(
+            """
+            CREATE TABLE load_plan (
+                flight_key TEXT PRIMARY KEY REFERENCES sector (key) ON DELETE CASCADE,
+                edition INTEGER NOT NULL
+            )
+            """,
+            """
+            CREATE TABLE plan_assignment (
+                flight_key TEXT NOT NULL REFERENCES load_plan (flight_key) ON DELETE CASCADE,
+                hold_position TEXT NOT NULL,
+                ordinal INTEGER NOT NULL,
+                weight INTEGER NOT NULL,
+                uld TEXT NOT NULL DEFAULT '',
+                destination TEXT NOT NULL DEFAULT '',
+                PRIMARY KEY (flight_key, hold_position)
+            )
+            """,
+            "CREATE INDEX plan_assignment_by_uld ON plan_assignment (uld)",
+        ),
+    ),
 )
 
 
