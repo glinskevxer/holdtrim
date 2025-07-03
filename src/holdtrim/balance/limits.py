@@ -12,10 +12,10 @@ is one carton moved, and 900 kg over the zero fuel weight is an offload.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from decimal import Decimal
 
 from holdtrim.balance.loading import Balance
+from holdtrim.findings import Finding
 from holdtrim.model.envelope import LANDING, TAKEOFF, ZERO_FUEL
 
 STRUCTURAL = "structural"
@@ -30,20 +30,6 @@ ENVELOPE_FOR_CONDITION = {
     TAKEOFF: TAKEOFF,
     LANDING: LANDING,
 }
-
-
-@dataclass(frozen=True)
-class Finding:
-    """One thing wrong with a plan, and by how much."""
-
-    check: str
-    where: str
-    detail: str
-    over_by: int = 0
-
-    def describe(self) -> str:
-        """One line for the load controller."""
-        return f"{self.check} {self.where}: {self.detail}"
 
 
 def structural(balance: Balance) -> tuple[Finding, ...]:

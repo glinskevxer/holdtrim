@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from holdtrim.balance import limits
-from holdtrim.balance.limits import Finding
+from holdtrim.findings import Finding
 from tests.balance.test_loading import balance
 
 
@@ -24,11 +24,6 @@ def test_too_much_payload_breaks_the_zero_fuel_weight() -> None:
 def test_the_finding_names_the_limit_it_broke() -> None:
     found = limits.structural(balance({"11P": 3175, "21P": 3175, "51": 3175}, takeoff_fuel=1600))
     assert "against a limit of 20800 kg" in found[0].detail
-
-
-def test_a_finding_describes_itself_in_one_line() -> None:
-    finding = Finding(check="structural", where="takeoff", detail="over", over_by=10)
-    assert finding.describe() == "structural takeoff: over"
 
 
 def test_too_much_fuel_breaks_the_ramp_weight() -> None:
