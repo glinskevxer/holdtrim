@@ -24,10 +24,15 @@ def conn(tmp_path: Path) -> Iterator[sqlite3.Connection]:
         yield connection
 
 
-def position(code: str, arm: str, accepts: tuple[str, ...] = ("PMC",)) -> Position:
+def position(
+    code: str,
+    arm: str,
+    accepts: tuple[str, ...] = ("PMC",),
+    compartment: str = "MAIN",
+) -> Position:
     return Position(
         code=code,
-        compartment="MAIN",
+        compartment=compartment,
         arm=Decimal(arm),
         max_weight=3175,
         length=Decimal("3.175"),
@@ -60,7 +65,7 @@ def a_type(code: str = "AT7F") -> AircraftType:
             positions=(
                 position("11P", "9.400"),
                 position("21P", "12.600"),
-                position("51", "18.100", accepts=()),
+                position("51", "18.100", accepts=(), compartment="BULK"),
             ),
             cumulative=(
                 CumulativeLimit(label="11P and 21P", positions=("11P", "21P"), max_weight=5400),
