@@ -8,8 +8,9 @@ from holdtrim.errors import RuleError
 from holdtrim.ids import Flight
 from holdtrim.model.flight import Sector
 from holdtrim.model.tail import Tail
+from holdtrim.plan.lmc import Change, Changes
 from holdtrim.plan.loadplan import Assignment, LoadPlan
-from holdtrim.sheet.loadsheet import Loadsheet
+from holdtrim.sheet.loadsheet import Loadsheet, after_changes
 from tests.fleet.test_type_store import a_type
 
 KEY = "QH412/2025-05-12"
@@ -130,6 +131,28 @@ def test_reissuing_moves_both_editions_on() -> None:
     assert again.edition == 2
     assert again.plan.edition == 2
     assert again.reference.endswith("edition 2")
+
+
+def test_a_sheet_with_changes_past_the_tolerance_will_not_issue() -> None:
+    changes = Changes(changes=(Change(position="11P", weight=900),))
+    made = sheet(changes=changes)
+    assert not made.signable
+    with pytest.raises(RuleError, match="issue a new loadsheet"):
+        made.issue()
+
+
+def test_a_change_moves_the_plan_and_the_balance_together() -> None:
+    changes = Changes(changes=(Change(position="11P", weight=-200),))
+    changed = after_changes(sheet(), changes)
+    assert changed.plan.weights["11P"] == 1800
+    assert changed.payload == 2100
+    assert changed.balance.zero_fuel.weight == 15740
+
+
+def test_a_change_carries_into_the_findings() -> None:
+    changes = Changes(changes=(Change(position="11P", weight=1400),))
+    changed = after_changes(sheet(), changes)
+    assert changed.findings
 
 
 def test_the_summary_carries_the_figures_a_handover_needs() -> None:

@@ -107,15 +107,26 @@ def problems(found: Sequence[Finding]) -> list[str]:
 
 
 def footer(sheet: Loadsheet) -> list[str]:
-    """The signature block."""
-    return [
-        RULE,
-        _row("last minute changes", "none"),
-        "",
-        "commander signature ...........................",
-        f"issued by {sheet.prepared_by}",
-        RULE,
-    ]
+    """The last minute change box and the signature block."""
+    lines = [RULE, "LAST MINUTE CHANGES".center(WIDTH), RULE]
+    lines.extend(sheet.changes.lines())
+    if not sheet.changes.empty:
+        lines.append(_row("net change", format_kilos(sheet.changes.net)))
+        lines.append(_row("handled", format_kilos(sheet.changes.total)))
+        if not sheet.changes.within_tolerance:
+            lines.append(
+                _row("past tolerance by", format_kilos(sheet.changes.over_by)),
+            )
+    lines.extend(
+        [
+            RULE,
+            "",
+            "commander signature ...........................",
+            f"issued by {sheet.prepared_by}",
+            RULE,
+        ]
+    )
+    return lines
 
 
 def render(sheet: Loadsheet) -> str:

@@ -13,16 +13,17 @@ number, which is how the plan is stored.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 
 from holdtrim.balance.limits import check
-from holdtrim.balance.loading import Balance
+from holdtrim.balance.loading import Balance, load_positions
 from holdtrim.errors import RuleError
 from holdtrim.findings import Finding
 from holdtrim.model.aircraft import AircraftType
 from holdtrim.model.flight import Sector
 from holdtrim.model.tail import Tail
+from holdtrim.plan.lmc import Changes, applied, check_tolerance
 from holdtrim.plan.loadplan import LoadPlan
 from holdtrim.units import to_percent
 
@@ -38,6 +39,7 @@ class Loadsheet:
     balance: Balance
     prepared_by: str
     edition: int = 1
+    changes: Changes = field(default_factory=Changes)
 
     @property
     def reference(self) -> str:
@@ -110,14 +112,15 @@ class Loadsheet:
     @property
     def signable(self) -> bool:
         """Whether this sheet may be handed over as it stands."""
-        return not self.findings
+        return not self.findings and self.changes.within_tolerance
 
     def issue(self) -> Loadsheet:
         """Confirm the sheet, refusing to issue one with a finding on it."""
-        if not self.signable:
+        if self.findings:
             raise RuleError(
                 f"{self.reference} cannot be issued, {len(self.findings)} check(s) failed"
             )
+        check_tolerance(self.changes)
         return self
 
     def reissued(self) -> Loadsheet:
@@ -140,3 +143,31 @@ class Loadsheet:
             f"MAC {to_percent(self.takeoff_percent_mac)} "
             f"trim {self.trim_setting}"
         )
+
+
+def after_changes(sheet: Loadsheet, changes: Changes) -> Loadsheet:
+    """The same sheet with last minute changes worked all the way through.
+
+    The plan, the balance and the findings all move together. Applying a change
+    to one of them and not the others is how a sheet ends up saying two
+    different things about the same aeroplane.
+    """
+    plan = applied(sheet.plan, changes)
+    balance = Balance(
+        kind=sheet.kind,
+        tail=sheet.tail,
+        loads=load_positions(sheet.kind, plan.weights),
+        taxi_fuel=sheet.balance.taxi_fuel,
+        trip_fuel=sheet.balance.trip_fuel,
+        takeoff_fuel=sheet.balance.takeoff_fuel,
+    )
+    return Loadsheet(
+        sector=sheet.sector,
+        tail=sheet.tail,
+        kind=sheet.kind,
+        plan=plan,
+        balance=balance,
+        prepared_by=sheet.prepared_by,
+        edition=sheet.edition,
+        changes=changes,
+    )

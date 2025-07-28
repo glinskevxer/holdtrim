@@ -1,4 +1,14 @@
-from holdtrim.sheet.render import RULE, balance, distribution, header, problems, render, weights
+from holdtrim.plan.lmc import Change, Changes
+from holdtrim.sheet.render import (
+    RULE,
+    balance,
+    distribution,
+    footer,
+    header,
+    problems,
+    render,
+    weights,
+)
 from tests.sheet.test_loadsheet import sheet
 
 
@@ -75,3 +85,22 @@ def test_every_line_of_the_sheet_fits_the_width() -> None:
 
 def test_the_sheet_ends_with_a_newline() -> None:
     assert render(sheet()).endswith("\n")
+
+
+def test_a_sheet_with_no_changes_writes_none_in_the_box() -> None:
+    printed = "\n".join(footer(sheet()))
+    assert "LAST MINUTE CHANGES" in printed
+    assert "none" in printed
+
+
+def test_the_box_lists_the_changes_and_what_they_came_to() -> None:
+    changes = Changes(changes=(Change(position="11P", weight=-200, what="one skid"),))
+    printed = "\n".join(footer(sheet(changes=changes)))
+    assert "offloaded 200 kg at 11P one skid" in printed
+    assert "handled" in printed
+
+
+def test_changes_past_the_tolerance_say_so_on_the_sheet() -> None:
+    changes = Changes(changes=(Change(position="11P", weight=900),))
+    printed = "\n".join(footer(sheet(changes=changes)))
+    assert "past tolerance by" in printed
