@@ -1,10 +1,11 @@
 from holdtrim.message import ldm
+from holdtrim.message.teletype import Message
 from holdtrim.plan.lmc import Change, Changes
 from holdtrim.plan.loadplan import Assignment, LoadPlan
 from tests.sheet.test_loadsheet import KEY, sheet
 
 
-def built() -> object:
+def built() -> Message:
     return ldm.build(
         sheet(),
         addresses=("LGGKLQH",),
@@ -61,15 +62,15 @@ def test_a_last_minute_change_reaches_the_supplementary_line() -> None:
 
 def test_the_message_is_addressed_and_typed() -> None:
     message = built()
-    assert message.kind == "LDM"  # type: ignore[attr-defined]
-    assert message.addresses == ("LGGKLQH",)  # type: ignore[attr-defined]
+    assert message.kind == "LDM"
+    assert message.addresses == ("LGGKLQH",)
 
 
 def test_the_rendered_message_reads_as_an_ldm() -> None:
-    printed = built().render()  # type: ignore[attr-defined]
+    printed = built().render()
     assert "LDM\n" in printed
     assert "-LGG.0/0/0.T2300" in printed
 
 
 def test_no_line_of_the_message_is_too_long_for_the_wire() -> None:
-    assert built().over_width == ()  # type: ignore[attr-defined]
+    assert built().over_width == ()
