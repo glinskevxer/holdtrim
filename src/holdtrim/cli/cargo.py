@@ -1,0 +1,154 @@
+"""Commands for the waybill file."""
+
+from __future__ import annotations
+
+from decimal import Decimal
+
+import click
+
+from holdtrim.cargo import handling
+from holdtrim.cli.common import echo_table, opened_book, parse_day
+from holdtrim.errors import DataError
+from holdtrim.ids import parse_awb
+from holdtrim.model.consignment import Consignment
+from holdtrim.store import consignments
+
+
+def _codes(text: str) -> tuple[str, ...]:
+    """Read the handling codes off the command line and check them."""
+    codes = tuple(code for code in text.replace(",", " ").split() if code)
+    unknown = handling.unknown(codes)
+    if unknown:
+        raise DataError(f"handling code(s) this build does not know: {', '.join(unknown)}")
+    return codes
+
+
+@click.group("cargo")
+def group() -> None:
+    """The consignments waiting to fly."""
+
+
+@group.command("book")
+@click.argument("awb")
+@click.argument("origin")
+@click.argument("destination")
+@click.option("--pieces", type=int, required=True, help="How many pieces.")
+@click.option("--weight", type=int, required=True, help="Gross weight in kilograms.")
+@click.option("--volume", default="0", help="Volume in cubic metres.")
+@click.option("--commodity", required=True, help="What it is.")
+@click.option("--ready", required=True, help="The day it is ready to fly.")
+@click.option("--shc", default="", help="Special handling codes, space separated.")
+@click.option("--shipper", default="", help="Shipper name.")
+@click.option("--consignee", default="", help="Consignee name.")
+@click.pass_context
+def book(
+    ctx: click.Context,
+    awb: str,
+    origin: str,
+    destination: str,
+    pieces: int,
+    weight: int,
+    volume: str,
+    commodity: str,
+    ready: str,
+    shc: str,
+    shipper: str,
+    consignee: str,
+) -> None:
+    """Put a waybill on file."""
+    consignment = Consignment(
+        awb=parse_awb(awb),
+        origin=origin,
+        destination=destination,
+        pieces=pieces,
+        gross_weight=weight,
+        volume=Decimal(volume),
+        commodity=commodity,
+        ready_on=parse_day(ready),
+        shipper=shipper,
+        consignee=consignee,
+        handling=_codes(shc),
+    )
+    with opened_book(ctx) as opened:
+        consignments.add(opened.connection, consignment)
+    click.echo(f"booked {consignment.describe()}")
+
+
+@group.command("list")
+@click.option("--from", "origin", default=None, help="Only this origin.")
+@click.option("--to", "destination", default=None, help="Only this destination.")
+@click.option("--ready-by", default=None, help="Only what is ready by this day.")
+@click.pass_context
+def listing(
+    ctx: click.Context, origin: str | None, destination: str | None, ready_by: str | None
+) -> None:
+    """The waybills on file."""
+    with opened_book(ctx) as opened:
+        if origin and destination and ready_by:
+            found = consignments.ready_by(
+                opened.connection, origin, destination, parse_day(ready_by)
+            )
+        elif origin and destination:
+            found = consignments.on_route(opened.connection, origin, destination)
+        else:
+            found = consignments.listing(opened.connection)
+    echo_table(
+        ["waybill", "route", "pieces", "weight", "chargeable", "ready", "codes"],
+        [
+            [
+                str(consignment.awb),
+                consignment.route,
+                str(consignment.pieces),
+                str(consignment.gross_weight),
+                str(consignment.chargeable_weight),
+                consignment.ready_on.isoformat(),
+                " ".join(consignment.handling),
+            ]
+            for consignment in found
+        ],
+        empty="no waybills on file",
+    )
+
+
+@group.command("show")
+@click.argument("awb")
+@click.pass_context
+def show(ctx: click.Context, awb: str) -> None:
+    """One waybill in full."""
+    with opened_book(ctx) as opened:
+        consignment = consignments.get(opened.connection, awb)
+    click.echo(f"waybill {consignment.awb}")
+    click.echo(f"route {consignment.origin} to {consignment.destination}")
+    click.echo(f"pieces {consignment.pieces}")
+    click.echo(f"gross weight {consignment.gross_weight} kg")
+    click.echo(f"volume {consignment.volume} cbm")
+    click.echo(f"volumetric weight {consignment.volumetric_weight} kg")
+    click.echo(f"chargeable weight {consignment.chargeable_weight} kg")
+    click.echo(f"density {consignment.density} kg per cbm")
+    click.echo(f"average piece {consignment.average_piece} kg")
+    click.echo(f"commodity {consignment.commodity}")
+    click.echo(f"ready {consignment.ready_on.isoformat()}")
+    for code in consignment.handling:
+        click.echo(f"handling {code} {handling.meaning(code)}")
+
+
+@group.command("tonnage")
+@click.argument("origin")
+@click.argument("destination")
+@click.pass_context
+def tonnage(ctx: click.Context, origin: str, destination: str) -> None:
+    """What is booked over one sector."""
+    with opened_book(ctx) as opened:
+        booked = consignments.tonnage(opened.connection, origin, destination)
+        found = consignments.on_route(opened.connection, origin, destination)
+    click.echo(f"{origin.upper()}{destination.upper()} {len(found)} waybill(s) {booked} kg")
+
+
+@group.command("remove")
+@click.argument("awb")
+@click.pass_context
+def remove(ctx: click.Context, awb: str) -> None:
+    """Take a waybill off file."""
+    with opened_book(ctx) as opened:
+        consignments.remove(opened.connection, awb)
+    click.echo(f"removed {awb}")
