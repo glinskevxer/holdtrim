@@ -8,7 +8,7 @@ from pathlib import Path
 import click
 
 from holdtrim import __version__
-from holdtrim.cli import cargo, fleetcmd, flights, stations, tails, ulds
+from holdtrim.cli import cargo, fleetcmd, flights, planning, stations, tails, ulds
 from holdtrim.cli.common import (
     DEFAULT_BOOK,
     Settings,
@@ -95,6 +95,7 @@ def book_backup(ctx: click.Context, destination: Path) -> None:
 cli.add_command(cargo.group)
 cli.add_command(fleetcmd.group)
 cli.add_command(flights.group)
+cli.add_command(planning.group)
 cli.add_command(stations.group)
 cli.add_command(tails.group)
 cli.add_command(ulds.group)
