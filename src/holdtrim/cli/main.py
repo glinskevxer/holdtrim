@@ -12,6 +12,7 @@ from holdtrim.cli import (
     cargo,
     fleetcmd,
     flights,
+    messages,
     planning,
     sheets,
     stations,
@@ -104,6 +105,7 @@ def book_backup(ctx: click.Context, destination: Path) -> None:
 cli.add_command(cargo.group)
 cli.add_command(fleetcmd.group)
 cli.add_command(flights.group)
+cli.add_command(messages.group)
 cli.add_command(planning.group)
 cli.add_command(sheets.group)
 cli.add_command(stations.group)
