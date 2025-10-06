@@ -1,5 +1,9 @@
 """The stabiliser trim setting that goes on the loadsheet.
 
+Like the fuel index table this is published data off the schedule, so it lives
+with the model. The reading of it is arithmetic and lives in the balance
+package.
+
 The crew set the trim before the takeoff roll and they set it from the centre
 of gravity, not from the weight. The schedule prints the relationship as a
 table of percent chord against setting, and the setting is what the loadsheet

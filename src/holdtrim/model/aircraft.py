@@ -17,11 +17,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal
 
-from holdtrim.balance.fuel import FuelTable
-from holdtrim.balance.trim import TrimTable
 from holdtrim.errors import DataError, NotFoundError
 from holdtrim.model.envelope import LANDING, TAKEOFF, ZERO_FUEL, Envelope
+from holdtrim.model.fuel import FuelTable
 from holdtrim.model.hold import HoldLayout
+from holdtrim.model.trim import TrimTable
 from holdtrim.units import to_index, to_kilos, to_metres
 
 TYPE_CODE_LENGTH = (3, 5)

@@ -16,13 +16,13 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
-from holdtrim.balance.fuel import FuelPoint, FuelTable
-from holdtrim.balance.trim import TrimPoint, TrimTable
 from holdtrim.errors import DataError
 from holdtrim.model.aircraft import AircraftType, MacGeometry, StructuralLimits
 from holdtrim.model.envelope import Envelope, EnvelopePoint
+from holdtrim.model.fuel import FuelPoint, FuelTable
 from holdtrim.model.hold import CumulativeLimit, HoldLayout
 from holdtrim.model.position import Position
+from holdtrim.model.trim import TrimPoint, TrimTable
 
 LIMIT_FIELDS = ("max_ramp", "max_takeoff", "max_landing", "max_zero_fuel")
 GEOMETRY_FIELDS = (

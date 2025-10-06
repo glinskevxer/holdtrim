@@ -12,15 +12,15 @@ import sqlite3
 from datetime import date
 from decimal import Decimal
 
-from holdtrim.balance.fuel import FuelPoint, FuelTable
-from holdtrim.balance.trim import TrimPoint, TrimTable
 from holdtrim.errors import DuplicateError, NotFoundError, StateError
 from holdtrim.ids import parse_registration
 from holdtrim.model.aircraft import AircraftType, MacGeometry, StructuralLimits
 from holdtrim.model.envelope import Envelope, EnvelopePoint
+from holdtrim.model.fuel import FuelPoint, FuelTable
 from holdtrim.model.hold import CumulativeLimit, HoldLayout
 from holdtrim.model.position import Position
 from holdtrim.model.tail import Tail
+from holdtrim.model.trim import TrimPoint, TrimTable
 from holdtrim.store.sqlite import one, rows, scalar_int, transaction
 
 ACCEPTS_SEPARATOR = "/"

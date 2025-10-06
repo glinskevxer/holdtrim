@@ -2,8 +2,8 @@ from decimal import Decimal
 
 import pytest
 
-from holdtrim.balance.fuel import FuelPoint, FuelTable
 from holdtrim.errors import DataError, RuleError
+from holdtrim.model.fuel import FuelPoint, FuelTable
 
 
 def table() -> FuelTable:

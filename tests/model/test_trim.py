@@ -2,8 +2,8 @@ from decimal import Decimal
 
 import pytest
 
-from holdtrim.balance.trim import TrimPoint, TrimTable
 from holdtrim.errors import DataError, RuleError
+from holdtrim.model.trim import TrimPoint, TrimTable
 
 
 def table() -> TrimTable:

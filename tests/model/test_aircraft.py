@@ -2,13 +2,13 @@ from decimal import Decimal
 
 import pytest
 
-from holdtrim.balance.fuel import FuelPoint, FuelTable
-from holdtrim.balance.trim import TrimPoint, TrimTable
 from holdtrim.errors import DataError, NotFoundError
 from holdtrim.model.aircraft import AircraftType, MacGeometry, StructuralLimits
 from holdtrim.model.envelope import Envelope, EnvelopePoint
+from holdtrim.model.fuel import FuelPoint, FuelTable
 from holdtrim.model.hold import HoldLayout
 from holdtrim.model.position import Position
+from holdtrim.model.trim import TrimPoint, TrimTable
 
 
 def limits() -> StructuralLimits:

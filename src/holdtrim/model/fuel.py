@@ -1,5 +1,11 @@
 """What the fuel does to the index.
 
+This is part of the weight schedule rather than part of the calculation, which
+is why it sits with the model and not with the arithmetic that uses it. It was
+in the balance package to begin with and that made the type depend on the
+calculation, which is backwards: the schedule is the thing that is published
+and the arithmetic is the thing that reads it.
+
 Fuel is not a load at a fixed arm. The tanks are in the wing and they fill and
 empty in a sequence, so the centre of gravity of the fuel moves as the quantity
 changes, and it does not move in a straight line. The schedule handles this by

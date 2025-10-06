@@ -5,13 +5,13 @@ from pathlib import Path
 
 import pytest
 
-from holdtrim.balance.fuel import FuelPoint, FuelTable
-from holdtrim.balance.trim import TrimPoint, TrimTable
 from holdtrim.errors import DuplicateError, NotFoundError
 from holdtrim.model.aircraft import AircraftType, MacGeometry, StructuralLimits
 from holdtrim.model.envelope import Envelope, EnvelopePoint
+from holdtrim.model.fuel import FuelPoint, FuelTable
 from holdtrim.model.hold import CumulativeLimit, HoldLayout
 from holdtrim.model.position import Position
+from holdtrim.model.trim import TrimPoint, TrimTable
 from holdtrim.store import fleet
 from holdtrim.store.migrations import apply
 from holdtrim.store.sqlite import opened, scalar_int
