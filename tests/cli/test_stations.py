@@ -2,6 +2,7 @@ from pathlib import Path
 
 from click.testing import CliRunner, Result
 
+from holdtrim.cli import stations
 from holdtrim.cli.main import cli
 
 
@@ -69,3 +70,7 @@ def test_showing_a_station_that_is_not_there_raises(runner: CliRunner, book: Pat
     run(runner, book, "init")
     result = run(runner, book, "station", "show", "CDG")
     assert result.exception is not None
+
+
+def test_the_group_is_registered_under_its_name() -> None:
+    assert cli.commands["station"] is stations.group

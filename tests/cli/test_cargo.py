@@ -2,6 +2,7 @@ from pathlib import Path
 
 from click.testing import CliRunner, Result
 
+from holdtrim.cli import cargo
 from holdtrim.cli.main import cli
 
 
@@ -106,3 +107,7 @@ def test_a_waybill_can_come_off_file(runner: CliRunner, book: Path) -> None:
     booked(runner, book)
     run(runner, book, "cargo", "remove", "125-12345675")
     assert "no waybills on file" in run(runner, book, "cargo", "list").output
+
+
+def test_the_group_is_registered_under_its_name() -> None:
+    assert cli.commands["cargo"] is cargo.group

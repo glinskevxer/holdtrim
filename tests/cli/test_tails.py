@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner, Result
 
+from holdtrim.cli import tails
 from holdtrim.cli.main import cli
 from holdtrim.schedule.document import save_schedule
 from tests.fleet.test_type_store import a_type
@@ -117,3 +118,7 @@ def test_an_aeroplane_can_come_off_the_fleet(runner: CliRunner, fleet_book: Path
     added(runner, fleet_book)
     run(runner, fleet_book, "tail", "remove", "OY-JAF")
     assert "no aeroplanes on the fleet" in run(runner, fleet_book, "tail", "list").output
+
+
+def test_the_group_is_registered_under_its_name() -> None:
+    assert cli.commands["tail"] is tails.group

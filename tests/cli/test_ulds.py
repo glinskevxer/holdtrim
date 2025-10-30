@@ -2,6 +2,7 @@ from pathlib import Path
 
 from click.testing import CliRunner, Result
 
+from holdtrim.cli import ulds
 from holdtrim.cli.main import cli
 
 
@@ -112,3 +113,7 @@ def test_a_device_can_come_off_the_register(runner: CliRunner, book: Path) -> No
     added(runner, book, at="BLL")
     run(runner, book, "uld", "remove", "PMC12345QH")
     assert "no devices on the register" in run(runner, book, "uld", "list").output
+
+
+def test_the_group_is_registered_under_its_name() -> None:
+    assert cli.commands["uld"] is ulds.group

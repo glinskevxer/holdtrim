@@ -2,6 +2,8 @@ from pathlib import Path
 
 from click.testing import CliRunner, Result
 
+from holdtrim.cli import planning
+from holdtrim.cli.main import cli
 from tests.cli.conftest import invoke
 
 
@@ -114,3 +116,7 @@ def test_a_plan_can_be_thrown_away(runner: CliRunner, flight_book: Path) -> None
     planned(runner, flight_book)
     result = run(runner, flight_book, "plan", "clear", "QH412", "2025-05-12")
     assert "cleared the plan" in result.output
+
+
+def test_the_group_is_registered_under_its_name() -> None:
+    assert cli.commands["plan"] is planning.group

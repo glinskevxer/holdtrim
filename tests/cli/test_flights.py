@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner, Result
 
+from holdtrim.cli import flights
 from holdtrim.cli.main import cli
 from holdtrim.schedule.document import save_schedule
 from tests.fleet.test_type_store import a_type
@@ -136,3 +137,7 @@ def test_a_passenger_flight_is_recorded_as_one(runner: CliRunner, fleet_book: Pa
     )
     result = run(runner, fleet_book, "flight", "show", "QH500", "2025-05-12")
     assert "freighter no" in result.output
+
+
+def test_the_group_is_registered_under_its_name() -> None:
+    assert cli.commands["flight"] is flights.group

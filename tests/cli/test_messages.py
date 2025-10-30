@@ -2,6 +2,8 @@ from pathlib import Path
 
 from click.testing import CliRunner, Result
 
+from holdtrim.cli import messages
+from holdtrim.cli.main import cli
 from tests.cli.conftest import invoke
 
 
@@ -114,3 +116,7 @@ def test_a_bad_address_is_refused(runner: CliRunner, flight_book: Path) -> None:
         "121815",
     )
     assert result.exception is not None
+
+
+def test_the_group_is_registered_under_its_name() -> None:
+    assert cli.commands["message"] is messages.group

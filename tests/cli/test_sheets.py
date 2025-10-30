@@ -2,6 +2,8 @@ from pathlib import Path
 
 from click.testing import CliRunner, Result
 
+from holdtrim.cli import sheets
+from holdtrim.cli.main import cli
 from tests.cli.conftest import invoke
 
 
@@ -128,3 +130,7 @@ def test_a_clean_flight_says_it_may_be_issued(runner: CliRunner, flight_book: Pa
     planned(runner, flight_book)
     result = run(runner, flight_book, "sheet", "findings", "QH412", "2025-05-12")
     assert "may be issued" in result.output
+
+
+def test_the_group_is_registered_under_its_name() -> None:
+    assert cli.commands["sheet"] is sheets.group

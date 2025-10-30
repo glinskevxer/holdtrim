@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner, Result
 
+from holdtrim.cli import fleetcmd
 from holdtrim.cli.main import cli
 from holdtrim.schedule.document import save_schedule
 from tests.fleet.test_type_store import a_type
@@ -98,3 +99,7 @@ def test_a_type_can_be_removed(runner: CliRunner, book: Path, schedule: Path) ->
     prepared(runner, book, schedule)
     run(runner, book, "fleet", "remove", "AT7F")
     assert "no types in the fleet register" in run(runner, book, "fleet", "types").output
+
+
+def test_the_group_is_registered_under_its_name() -> None:
+    assert cli.commands["fleet"] is fleetcmd.group
