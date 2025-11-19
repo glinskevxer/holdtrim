@@ -1,0 +1,163 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e ".[dev]" -c constraints.txt
+      - run: python -m ruff check .
+      - run: python -m ruff format --check .
+      - run: python -m mypy
+      - run: python -m holdtrim.tools.check_docstrings
+      - run: python -m holdtrim.tools.check_clock
+      - run: python -m holdtrim.tools.check_layers
+      - run: python -m holdtrim.tools.check_sql
+      - run: python -m holdtrim.tools.check_tests
+      - run: python -m holdtrim.tools.check_help
+
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e ".[dev]" -c constraints.txt
+      - run: python -m pytest -q
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e ".[dev]" -c constraints.txt
+      - run: python -m pytest -q --cov --cov-report=json --cov-report=term-missing
+      - run: python -m holdtrim.tools.coverage_gate --floor 97 --file-floor 85 --worst 8
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage.json
+
+  installed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install .
+      - run: holdtrim --version
+      - run: python -m holdtrim.tools.smoke
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install --upgrade pip build
+      - run: python -m build
+      - run: python -m pip install dist/*.whl
+      - run: python -c "import holdtrim; print(holdtrim.__version__)"
+      - run: python -m holdtrim.tools.smoke --quiet
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+  walk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install .
+      - name: work a flight through the console script
+        run: |
+          set -euo pipefail
+          book=/tmp/walk.sqlite3
+          rm -f "$book"
+          holdtrim --book "$book" init
+          holdtrim --book "$book" station add BLL Billund --elevation 247
+          holdtrim --book "$book" station add LGG Liege --elevation 659 --agent "Swissport"
+          holdtrim --book "$book" station list
+          holdtrim --book "$book" fleet load examples/at7f.json
+          holdtrim --book "$book" fleet types
+          holdtrim --book "$book" fleet show AT7F
+          holdtrim --book "$book" fleet positions AT7F
+          holdtrim --book "$book" fleet envelope AT7F takeoff
+          holdtrim --book "$book" tail add OY-JAF AT7F --dow 13640 --doi 46.2 \
+            --weighed 2024-06-18 --serial 0412
+          holdtrim --book "$book" tail list
+          holdtrim --book "$book" tail show OY-JAF --on 2025-05-12
+          holdtrim --book "$book" tail weighings --on 2029-05-01
+          holdtrim --book "$book" uld add PMC12345QH --tare 110 --max-gross 4626 --at BLL
+          holdtrim --book "$book" uld add PMC12346QH --tare 110 --max-gross 4626 --at BLL
+          holdtrim --book "$book" uld stock BLL
+          holdtrim --book "$book" cargo book 125-12345675 BLL LGG --pieces 8 \
+            --weight 1240 --volume 4.2 --commodity "machine parts" --ready 2025-05-11 \
+            --shc PER
+          holdtrim --book "$book" cargo book 125-20000046 BLL LGG --pieces 4 \
+            --weight 760 --volume 2.1 --commodity "spare parts" --ready 2025-05-11
+          holdtrim --book "$book" cargo list --from BLL --to LGG --ready-by 2025-05-12
+          holdtrim --book "$book" cargo show 125-12345675
+          holdtrim --book "$book" cargo tonnage BLL LGG
+          holdtrim --book "$book" flight add QH412 2025-05-12 OY-JAF BLL LGG \
+            --taxi 90 --trip 1450 --takeoff 2600
+          holdtrim --book "$book" flight show QH412 2025-05-12
+          holdtrim --book "$book" plan auto QH412 2025-05-12 \
+            --load PMC12345QH=2000 --load PMC12346QH=900
+          holdtrim --book "$book" plan show QH412 2025-05-12
+          holdtrim --book "$book" plan check QH412 2025-05-12
+          holdtrim --book "$book" sheet findings QH412 2025-05-12
+          holdtrim --book "$book" sheet print QH412 2025-05-12 --by "CI"
+          holdtrim --book "$book" sheet summary QH412 2025-05-12
+          holdtrim --book "$book" message plan QH412 2025-05-12 \
+            --to LGGKLQH --from BLLLDQH --filed 121815
+          holdtrim --book "$book" message ucm QH412 2025-05-12 \
+            --off PMC12345QH/L --off PMC12346QH/L \
+            --to LGGKLQH --from BLLLDQH --filed 121815
+          holdtrim --book "$book" sheet issue QH412 2025-05-12 --by "CI"
+          holdtrim --book "$book" flight list --day 2025-05-12
+          holdtrim --book "$book" book counts
+          holdtrim --book "$book" book verify
+          holdtrim --book "$book" about

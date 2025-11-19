@@ -1,0 +1,129 @@
+{
+  "code": "AT7F",
+  "name": "ATR 72 freighter",
+  "empty_weight": 13100,
+  "limits": {
+    "max_ramp": 23050,
+    "max_takeoff": 22800,
+    "max_landing": 22350,
+    "max_zero_fuel": 20800
+  },
+  "geometry": {
+    "reference_arm": "12.615",
+    "lemac": "11.409",
+    "mac_length": "2.303",
+    "index_constant": "1000.000",
+    "index_reference": "50.0"
+  },
+  "positions": [
+    {
+      "code": "11P",
+      "compartment": "MAIN",
+      "arm": "9.400",
+      "max_weight": 3175,
+      "length": "3.175",
+      "width": "2.235",
+      "max_running_load": 1200,
+      "max_area_load": 732,
+      "accepts": [
+        "PMC"
+      ]
+    },
+    {
+      "code": "21P",
+      "compartment": "MAIN",
+      "arm": "12.600",
+      "max_weight": 3175,
+      "length": "3.175",
+      "width": "2.235",
+      "max_running_load": 1200,
+      "max_area_load": 732,
+      "accepts": [
+        "PMC"
+      ]
+    },
+    {
+      "code": "51",
+      "compartment": "BULK",
+      "arm": "18.100",
+      "max_weight": 3175,
+      "length": "3.175",
+      "width": "2.235",
+      "max_running_load": 1200,
+      "max_area_load": 732,
+      "accepts": []
+    }
+  ],
+  "cumulative": [
+    {
+      "label": "11P and 21P",
+      "positions": [
+        "11P",
+        "21P"
+      ],
+      "max_weight": 5400
+    }
+  ],
+  "fuel": [
+    {
+      "weight": 0,
+      "index": "0.0"
+    },
+    {
+      "weight": 2000,
+      "index": "-3.6"
+    },
+    {
+      "weight": 4500,
+      "index": "1.2"
+    }
+  ],
+  "trim": [
+    {
+      "percent_mac": "15.0",
+      "setting": "5.5"
+    },
+    {
+      "percent_mac": "35.0",
+      "setting": "1.5"
+    }
+  ],
+  "envelopes": {
+    "landing": [
+      {
+        "weight": 13000,
+        "forward_index": "30.0",
+        "aft_index": "66.0"
+      },
+      {
+        "weight": 20800,
+        "forward_index": "38.0",
+        "aft_index": "58.0"
+      }
+    ],
+    "takeoff": [
+      {
+        "weight": 13000,
+        "forward_index": "30.0",
+        "aft_index": "66.0"
+      },
+      {
+        "weight": 20800,
+        "forward_index": "38.0",
+        "aft_index": "58.0"
+      }
+    ],
+    "zero fuel": [
+      {
+        "weight": 13000,
+        "forward_index": "30.0",
+        "aft_index": "66.0"
+      },
+      {
+        "weight": 20800,
+        "forward_index": "38.0",
+        "aft_index": "58.0"
+      }
+    ]
+  }
+}

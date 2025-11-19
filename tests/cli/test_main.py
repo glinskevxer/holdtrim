@@ -1,10 +1,15 @@
+import sqlite3
+import sys
 from pathlib import Path
 
+import click
+import pytest
 from click.testing import CliRunner, Result
 
 from holdtrim import __version__
 from holdtrim.cli.common import exit_code_for, table
 from holdtrim.cli.main import cli
+from holdtrim.cli.main import run as run_entry_point
 from holdtrim.errors import (
     BookError,
     DataError,
@@ -94,3 +99,43 @@ def test_a_table_lines_its_columns_up() -> None:
 
 def test_a_table_with_no_rows_is_empty() -> None:
     assert table(["code"], []) == ""
+
+
+def test_the_entry_point_turns_a_refusal_into_an_exit_status(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setattr(
+        sys, "argv", ["holdtrim", "--book", str(tmp_path / "missing.sqlite3"), "book", "counts"]
+    )
+    with pytest.raises(SystemExit) as raised:
+        run_entry_point()
+    assert raised.value.code == 7
+
+
+def test_the_entry_point_reports_a_bad_command(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(sys, "argv", ["holdtrim", "nonsense"])
+    with pytest.raises(SystemExit) as raised:
+        run_entry_point()
+    assert raised.value.code != 0
+
+
+def test_the_entry_point_handles_being_stopped(monkeypatch: pytest.MonkeyPatch) -> None:
+    def abort() -> None:
+        raise click.Abort
+
+    monkeypatch.setattr(cli, "main", lambda **_kwargs: abort())
+    with pytest.raises(SystemExit) as raised:
+        run_entry_point()
+    assert raised.value.code == 130
+
+
+def test_a_book_with_a_dangling_reference_will_not_verify(runner: CliRunner, book: Path) -> None:
+    run(runner, book, "init")
+    connection = sqlite3.connect(book)
+    connection.execute("PRAGMA foreign_keys = OFF")
+    connection.execute("INSERT INTO load_plan (flight_key, edition) VALUES ('QH999/2025-05-12', 1)")
+    connection.commit()
+    connection.close()
+    result = run(runner, book, "book", "verify")
+    assert result.exit_code == 7
+    assert "problem:" in result.output
