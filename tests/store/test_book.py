@@ -33,6 +33,7 @@ def test_opening_with_create_makes_one(tmp_path: Path) -> None:
             "uld": 0,
             "sector": 0,
             "load_plan": 0,
+            "uld_movement": 0,
         }
     assert path.exists()
 

@@ -241,6 +241,29 @@ MIGRATIONS: tuple[Migration, ...] = (
             "CREATE INDEX plan_assignment_by_uld ON plan_assignment (uld)",
         ),
     ),
+    Migration(
+        version=10,
+        name="uld movements",
+        statements=(
+            """
+            CREATE TABLE uld_movement (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                day TEXT NOT NULL,
+                station TEXT NOT NULL,
+                uld TEXT NOT NULL,
+                type_code TEXT NOT NULL,
+                serial TEXT NOT NULL,
+                owner TEXT NOT NULL,
+                direction TEXT NOT NULL,
+                flight_key TEXT NOT NULL DEFAULT '',
+                state TEXT NOT NULL,
+                note TEXT NOT NULL DEFAULT ''
+            )
+            """,
+            "CREATE INDEX uld_movement_by_station ON uld_movement (station, day)",
+            "CREATE INDEX uld_movement_by_uld ON uld_movement (uld, day)",
+        ),
+    ),
 )
 
 
