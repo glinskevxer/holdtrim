@@ -12,7 +12,7 @@ wrong by a few hundred kilograms before anything is put in it.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from holdtrim.errors import DataError
 from holdtrim.ids import UldCode, parse_station, parse_uld
@@ -89,14 +89,7 @@ class Uld:
 
     def at(self, station: str) -> Uld:
         """The same device recorded at another station."""
-        return Uld(
-            code=self.code,
-            tare=self.tare,
-            max_gross=self.max_gross,
-            at_station=station,
-            condition=self.condition,
-            contour=self.contour,
-        )
+        return replace(self, at_station=station)
 
     def describe(self) -> str:
         """One line for a stock listing."""

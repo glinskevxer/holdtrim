@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import click
 
 from holdtrim.cli.common import echo_table, opened_book, parse_day
@@ -128,19 +130,7 @@ def set_status(ctx: click.Context, designator: str, day: str, status: str) -> No
     """Move a flight on to its next state."""
     with opened_book(ctx) as book:
         sector = flights.find(book.connection, designator, parse_day(day))
-        changed = Sector(
-            designator=sector.designator,
-            day=sector.day,
-            registration=sector.registration,
-            origin=sector.origin,
-            destination=sector.destination,
-            taxi_fuel=sector.taxi_fuel,
-            trip_fuel=sector.trip_fuel,
-            takeoff_fuel=sector.takeoff_fuel,
-            crew=sector.crew,
-            freighter=sector.freighter,
-            status=status,
-        )
+        changed = replace(sector, status=status)
         flights.save(book.connection, changed)
     click.echo(f"{changed.reference} is now {status}")
 
@@ -163,18 +153,11 @@ def refuel(
     """Record the fuel figures the flight plan came back with."""
     with opened_book(ctx) as book:
         sector = flights.find(book.connection, designator, parse_day(day))
-        changed = Sector(
-            designator=sector.designator,
-            day=sector.day,
-            registration=sector.registration,
-            origin=sector.origin,
-            destination=sector.destination,
+        changed = replace(
+            sector,
             taxi_fuel=sector.taxi_fuel if taxi is None else taxi,
             trip_fuel=sector.trip_fuel if trip is None else trip,
             takeoff_fuel=sector.takeoff_fuel if takeoff is None else takeoff,
-            crew=sector.crew,
-            freighter=sector.freighter,
-            status=sector.status,
         )
         flights.save(book.connection, changed)
     click.echo(

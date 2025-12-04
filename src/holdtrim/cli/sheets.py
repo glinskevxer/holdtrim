@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import click
 
 from holdtrim.cli.common import opened_book, parse_day
 from holdtrim.errors import DataError
-from holdtrim.model.flight import CLOSED, Sector
+from holdtrim.model.flight import CLOSED
 from holdtrim.office import Office
 from holdtrim.plan.lmc import Change, Changes
 from holdtrim.sheet.loadsheet import after_changes
@@ -81,19 +83,7 @@ def issue(ctx: click.Context, designator: str, day: str, prepared_by: str, editi
         file = office.on(designator, parse_day(day))
         file.check_flyable()
         sheet = file.loadsheet(prepared_by, edition=edition).issue()
-        closed = Sector(
-            designator=file.sector.designator,
-            day=file.sector.day,
-            registration=file.sector.registration,
-            origin=file.sector.origin,
-            destination=file.sector.destination,
-            taxi_fuel=file.sector.taxi_fuel,
-            trip_fuel=file.sector.trip_fuel,
-            takeoff_fuel=file.sector.takeoff_fuel,
-            crew=file.sector.crew,
-            freighter=file.sector.freighter,
-            status=CLOSED,
-        )
+        closed = replace(file.sector, status=CLOSED)
         flights.save(book.connection, closed)
     click.echo(f"issued {sheet.reference}")
     click.echo(sheet.summary())

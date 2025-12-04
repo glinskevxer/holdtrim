@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import click
 
 from holdtrim.cli.common import echo_table, opened_book
@@ -85,10 +87,9 @@ def change(
     """Change what is already registered for a station."""
     with opened_book(ctx) as book:
         station = stations.get(book.connection, code)
-        changed = Station(
-            code=station.code,
+        changed = replace(
+            station,
             name=station.name if name is None else name,
-            elevation_feet=station.elevation_feet,
             handling_agent=station.handling_agent if agent is None else agent,
             free_storage_days=(station.free_storage_days if free_days is None else free_days),
         )

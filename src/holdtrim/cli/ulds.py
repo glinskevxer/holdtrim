@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import click
 
 from holdtrim.cli.common import echo_table, opened_book
@@ -122,14 +124,7 @@ def condition(ctx: click.Context, code: str, state: str) -> None:
     """Record a change of condition."""
     with opened_book(ctx) as book:
         device = ulds.get(book.connection, code)
-        changed = uld(
-            code=device.code.formatted(),
-            tare=device.tare,
-            max_gross=device.max_gross,
-            at_station=device.at_station,
-            condition=state,
-            contour=device.contour,
-        )
+        changed = replace(device, condition=state)
         ulds.save(book.connection, changed)
     click.echo(f"{changed.code} is now {state}")
 

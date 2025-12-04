@@ -13,7 +13,7 @@ position, nothing weighing nothing, and no device loaded twice.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from holdtrim.errors import DataError, NotFoundError, RuleError
 from holdtrim.ids import parse_station, parse_uld
@@ -133,27 +133,16 @@ class LoadPlan:
                 f"position {assignment.position} already holds "
                 f"{self.at(assignment.position).uld or BULK}"
             )
-        return LoadPlan(
-            flight_key=self.flight_key,
-            assignments=(*self.assignments, assignment),
-            edition=self.edition,
-        )
+        return replace(self, assignments=(*self.assignments, assignment))
 
     def release(self, position: str) -> LoadPlan:
         """Take whatever is in a position out of the plan."""
         wanted = position.strip().upper()
         if not self.holds(wanted):
             raise NotFoundError(f"nothing is planned for position {wanted}")
-        return LoadPlan(
-            flight_key=self.flight_key,
-            assignments=tuple(a for a in self.assignments if a.position != wanted),
-            edition=self.edition,
-        )
+        kept = tuple(a for a in self.assignments if a.position != wanted)
+        return replace(self, assignments=kept)
 
     def reissued(self) -> LoadPlan:
         """The same plan at the next edition, which is what a change makes."""
-        return LoadPlan(
-            flight_key=self.flight_key,
-            assignments=self.assignments,
-            edition=self.edition + 1,
-        )
+        return replace(self, edition=self.edition + 1)

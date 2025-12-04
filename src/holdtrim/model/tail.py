@@ -13,7 +13,7 @@ so the expiry is on the record rather than in somebody's diary.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
 from decimal import Decimal
 
@@ -102,15 +102,10 @@ class Tail:
         A pantry taken out or a spare wheel put on board changes both numbers
         together, and the pair only means anything applied together.
         """
-        return Tail(
-            registration=self.registration,
-            type_code=self.type_code,
+        return replace(
+            self,
             dry_operating_weight=self.dry_operating_weight + weight,
             dry_operating_index=to_index(self.dry_operating_index + index),
-            weighed_on=self.weighed_on,
-            serial_number=self.serial_number,
-            status=self.status,
-            weighing_valid_months=self.weighing_valid_months,
         )
 
     def describe(self) -> str:

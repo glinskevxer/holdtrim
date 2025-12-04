@@ -13,7 +13,7 @@ number, which is how the plan is stored.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from decimal import Decimal
 
 from holdtrim.balance.limits import check
@@ -125,15 +125,7 @@ class Loadsheet:
 
     def reissued(self) -> Loadsheet:
         """The next edition of the same sheet."""
-        return Loadsheet(
-            sector=self.sector,
-            tail=self.tail,
-            kind=self.kind,
-            plan=self.plan.reissued(),
-            balance=self.balance,
-            prepared_by=self.prepared_by,
-            edition=self.edition + 1,
-        )
+        return replace(self, plan=self.plan.reissued(), edition=self.edition + 1)
 
     def summary(self) -> str:
         """The one line a handover note carries."""
@@ -161,13 +153,4 @@ def after_changes(sheet: Loadsheet, changes: Changes) -> Loadsheet:
         trip_fuel=sheet.balance.trip_fuel,
         takeoff_fuel=sheet.balance.takeoff_fuel,
     )
-    return Loadsheet(
-        sector=sheet.sector,
-        tail=sheet.tail,
-        kind=sheet.kind,
-        plan=plan,
-        balance=balance,
-        prepared_by=sheet.prepared_by,
-        edition=sheet.edition,
-        changes=changes,
-    )
+    return replace(sheet, plan=plan, balance=balance, changes=changes)

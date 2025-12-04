@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from decimal import Decimal
 
 import click
@@ -117,16 +118,7 @@ def set_status(ctx: click.Context, registration: str, status: str) -> None:
     """Move an aeroplane in or out of service."""
     with opened_book(ctx) as book:
         aeroplane = fleet.get_tail(book.connection, registration)
-        changed = Tail(
-            registration=aeroplane.registration,
-            type_code=aeroplane.type_code,
-            dry_operating_weight=aeroplane.dry_operating_weight,
-            dry_operating_index=aeroplane.dry_operating_index,
-            weighed_on=aeroplane.weighed_on,
-            serial_number=aeroplane.serial_number,
-            status=status,
-            weighing_valid_months=aeroplane.weighing_valid_months,
-        )
+        changed = replace(aeroplane, status=status)
         fleet.save_tail(book.connection, changed)
     click.echo(f"{changed.registration} is now {status}")
 
