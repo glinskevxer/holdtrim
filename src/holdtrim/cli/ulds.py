@@ -6,9 +6,10 @@ from dataclasses import replace
 
 import click
 
-from holdtrim.cli.common import echo_table, opened_book
+from holdtrim.cli.common import echo_table, opened_book, parse_day
+from holdtrim.model.movement import DIRECTIONS, STATES, movement
 from holdtrim.model.uld import CONDITIONS, CONTOURS, uld
-from holdtrim.store import ulds
+from holdtrim.store import movements, ulds
 
 
 @click.group("uld")
@@ -108,12 +109,115 @@ def show(ctx: click.Context, code: str) -> None:
 @group.command("move")
 @click.argument("code")
 @click.argument("station")
+@click.option("--on", required=True, help="The day it moved.")
+@click.option("--flight", default="", help="The flight it moved on, blank for a road move.")
+@click.option(
+    "--state",
+    type=click.Choice(STATES),
+    default="empty",
+    show_default=True,
+    help="What state it moved in.",
+)
 @click.pass_context
-def move(ctx: click.Context, code: str, station: str) -> None:
-    """Record a device somewhere else."""
+def move(ctx: click.Context, code: str, station: str, on: str, flight: str, state: str) -> None:
+    """Record a device somewhere else, and log both halves of the move.
+
+    A move is two facts, not one. It left somewhere and it arrived somewhere,
+    and a log that only carries the arrival cannot tell you when the station it
+    came from stopped being charged for it.
+    """
+    day = parse_day(on)
     with opened_book(ctx) as book:
+        device = ulds.get(book.connection, code)
+        if device.at_station:
+            movements.record(
+                book.connection,
+                movement(
+                    day=day,
+                    station=device.at_station,
+                    uld=device.code.formatted(),
+                    direction="out",
+                    flight_key=flight,
+                    state=state,
+                ),
+            )
         moved = ulds.move(book.connection, code, station)
+        movements.record(
+            book.connection,
+            movement(
+                day=day,
+                station=moved.at_station,
+                uld=moved.code.formatted(),
+                direction="in",
+                flight_key=flight,
+                state=state,
+            ),
+        )
     click.echo(f"{moved.code} is now at {moved.at_station}")
+
+
+@group.command("record")
+@click.argument("code")
+@click.argument("station")
+@click.argument("direction", type=click.Choice(DIRECTIONS))
+@click.option("--on", required=True, help="The day it happened.")
+@click.option("--flight", default="", help="The flight it moved on, blank for a road move.")
+@click.option(
+    "--state",
+    type=click.Choice(STATES),
+    default="empty",
+    show_default=True,
+    help="What state it was in.",
+)
+@click.option("--note", default="", help="Anything the next person needs to know.")
+@click.pass_context
+def record(
+    ctx: click.Context,
+    code: str,
+    station: str,
+    direction: str,
+    on: str,
+    flight: str,
+    state: str,
+    note: str,
+) -> None:
+    """Put one movement in the log without touching the register."""
+    moved = movement(
+        day=parse_day(on),
+        station=station,
+        uld=code,
+        direction=direction,
+        flight_key=flight,
+        state=state,
+        note=note,
+    )
+    with opened_book(ctx) as book:
+        movements.record(book.connection, moved)
+    click.echo(f"logged {moved.describe()}")
+
+
+@group.command("log")
+@click.argument("code")
+@click.pass_context
+def log(ctx: click.Context, code: str) -> None:
+    """One device's whole history."""
+    with opened_book(ctx) as book:
+        history = movements.for_uld(book.connection, code)
+    echo_table(
+        ["day", "station", "direction", "state", "flight", "note"],
+        [
+            [
+                moved.day.isoformat(),
+                moved.station,
+                moved.direction,
+                moved.state,
+                moved.flight_key or "by road",
+                moved.note,
+            ]
+            for moved in history
+        ],
+        empty=f"nothing has ever been logged for {code.upper()}",
+    )
 
 
 @group.command("condition")

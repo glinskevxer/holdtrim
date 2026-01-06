@@ -71,8 +71,55 @@ def test_a_device_shows_in_full(runner: CliRunner, book: Path) -> None:
 def test_a_device_can_be_moved(runner: CliRunner, book: Path) -> None:
     run(runner, book, "init")
     added(runner, book, at="BLL")
-    result = run(runner, book, "uld", "move", "PMC12345QH", "LGG")
+    result = run(runner, book, "uld", "move", "PMC12345QH", "LGG", "--on", "2025-05-12")
     assert "is now at LGG" in result.output
+
+
+def test_a_move_logs_both_halves(runner: CliRunner, book: Path) -> None:
+    run(runner, book, "init")
+    added(runner, book, at="BLL")
+    run(runner, book, "uld", "move", "PMC12345QH", "LGG", "--on", "2025-05-12")
+    result = run(runner, book, "uld", "log", "PMC12345QH")
+    assert "BLL" in result.output
+    assert "out" in result.output
+    assert "LGG" in result.output
+
+
+def test_a_device_that_was_nowhere_logs_only_the_arrival(runner: CliRunner, book: Path) -> None:
+    run(runner, book, "init")
+    added(runner, book)
+    run(runner, book, "uld", "move", "PMC12345QH", "LGG", "--on", "2025-05-12")
+    result = run(runner, book, "uld", "log", "PMC12345QH")
+    assert result.output.count("2025-05-12") == 1
+
+
+def test_a_movement_can_be_logged_on_its_own(runner: CliRunner, book: Path) -> None:
+    run(runner, book, "init")
+    added(runner, book, at="BLL")
+    result = run(
+        runner,
+        book,
+        "uld",
+        "record",
+        "PMC12345QH",
+        "BLL",
+        "in",
+        "--on",
+        "2025-05-12",
+        "--flight",
+        "QH412/2025-05-12",
+        "--note",
+        "corner damage",
+    )
+    assert "logged 2025-05-12 BLL in PMC12345QH" in result.output
+    assert "corner damage" in result.output
+
+
+def test_a_device_with_no_history_says_so(runner: CliRunner, book: Path) -> None:
+    run(runner, book, "init")
+    added(runner, book, at="BLL")
+    result = run(runner, book, "uld", "log", "PMC12345QH")
+    assert "nothing has ever been logged for PMC12345QH" in result.output
 
 
 def test_a_condition_can_be_recorded(runner: CliRunner, book: Path) -> None:
