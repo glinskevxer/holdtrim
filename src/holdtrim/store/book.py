@@ -38,6 +38,7 @@ COUNTED_TABLES = (
     "sector",
     "load_plan",
     "uld_movement",
+    "dangerous_goods",
 )
 
 

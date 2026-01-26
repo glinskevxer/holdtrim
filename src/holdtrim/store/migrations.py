@@ -264,6 +264,30 @@ MIGRATIONS: tuple[Migration, ...] = (
             "CREATE INDEX uld_movement_by_uld ON uld_movement (uld, day)",
         ),
     ),
+    Migration(
+        version=11,
+        name="dangerous goods",
+        statements=(
+            """
+            CREATE TABLE dangerous_goods (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                awb TEXT NOT NULL,
+                un_number INTEGER NOT NULL,
+                proper_shipping_name TEXT NOT NULL,
+                hazard_class TEXT NOT NULL,
+                packages INTEGER NOT NULL,
+                net_quantity TEXT NOT NULL,
+                unit TEXT NOT NULL,
+                packing_group TEXT NOT NULL DEFAULT '',
+                packing_instruction TEXT NOT NULL DEFAULT '',
+                subsidiary_risks TEXT NOT NULL DEFAULT '',
+                cargo_aircraft_only INTEGER NOT NULL DEFAULT 0,
+                transport_index TEXT NOT NULL DEFAULT ''
+            )
+            """,
+            "CREATE INDEX dangerous_goods_by_awb ON dangerous_goods (awb, un_number)",
+        ),
+    ),
 )
 
 
