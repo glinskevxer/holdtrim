@@ -10,6 +10,7 @@ import click
 from holdtrim import __version__
 from holdtrim.cli import (
     cargo,
+    dangergoods,
     fleetcmd,
     flights,
     messages,
@@ -104,6 +105,7 @@ def book_backup(ctx: click.Context, destination: Path) -> None:
 
 
 cli.add_command(cargo.group)
+cli.add_command(dangergoods.group)
 cli.add_command(fleetcmd.group)
 cli.add_command(flights.group)
 cli.add_command(messages.group)
