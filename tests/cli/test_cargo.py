@@ -102,6 +102,70 @@ def test_the_tonnage_over_a_sector_reads_back(runner: CliRunner, book: Path) -> 
     assert "BLLLGG 2 waybill(s) 2000 kg" in result.output
 
 
+def device(runner: CliRunner, book: Path, code: str = "PMC12345QH") -> None:
+    run(
+        runner,
+        book,
+        "uld",
+        "add",
+        code,
+        "--tare",
+        "110",
+        "--max-gross",
+        "4626",
+        "--at",
+        "BLL",
+    )
+
+
+def test_a_device_builds_up_from_waybills(runner: CliRunner, book: Path) -> None:
+    prepared(runner, book)
+    device(runner, book)
+    booked(runner, book, "125-12345675")
+    booked(runner, book, "125-20000046", weight="760")
+    result = run(
+        runner,
+        book,
+        "cargo",
+        "build",
+        "PMC12345QH",
+        "--awb",
+        "125-12345675",
+        "--awb",
+        "125-20000046",
+    )
+    assert "gross 2110 kg of 4626 kg" in result.output
+    assert "spare 2516 kg" in result.output
+
+
+def test_a_build_up_reports_its_handling(runner: CliRunner, book: Path) -> None:
+    prepared(runner, book)
+    device(runner, book)
+    booked(runner, book, shc="RFL NST")
+    result = run(runner, book, "cargo", "build", "PMC12345QH", "--awb", "125-12345675")
+    assert "stackable no" in result.output
+    assert "dangerous goods yes" in result.output
+
+
+def test_a_build_up_that_would_be_over_gross_is_refused(runner: CliRunner, book: Path) -> None:
+    prepared(runner, book)
+    device(runner, book)
+    booked(runner, book, "125-12345675", weight="4000")
+    booked(runner, book, "125-20000046", weight="900")
+    result = run(
+        runner,
+        book,
+        "cargo",
+        "build",
+        "PMC12345QH",
+        "--awb",
+        "125-12345675",
+        "--awb",
+        "125-20000046",
+    )
+    assert result.exception is not None
+
+
 def test_a_waybill_can_come_off_file(runner: CliRunner, book: Path) -> None:
     prepared(runner, book)
     booked(runner, book)

@@ -7,11 +7,12 @@ from decimal import Decimal
 import click
 
 from holdtrim.cargo import handling
+from holdtrim.cargo.buildup import build
 from holdtrim.cli.common import echo_table, opened_book, parse_day
 from holdtrim.errors import DataError
 from holdtrim.ids import parse_awb
 from holdtrim.model.consignment import Consignment
-from holdtrim.store import consignments
+from holdtrim.store import consignments, ulds
 
 
 def _codes(text: str) -> tuple[str, ...]:
@@ -130,6 +131,32 @@ def show(ctx: click.Context, awb: str) -> None:
     click.echo(f"ready {consignment.ready_on.isoformat()}")
     for code in consignment.handling:
         click.echo(f"handling {code} {handling.meaning(code)}")
+
+
+@group.command("build")
+@click.argument("code")
+@click.option("--awb", "waybills", multiple=True, required=True, help="A waybill to load.")
+@click.pass_context
+def build_up(ctx: click.Context, code: str, waybills: tuple[str, ...]) -> None:
+    """Build waybills into a device, in the order they are given.
+
+    Nothing is written. This is the check the warehouse runs before it starts
+    stacking, so that a device that will not take the load is found out about
+    on paper rather than on a scale.
+    """
+    with opened_book(ctx) as opened:
+        device = ulds.get(opened.connection, code)
+        loaded = tuple(consignments.get(opened.connection, awb) for awb in waybills)
+    made = build(device, loaded)
+    click.echo(made.describe())
+    click.echo(f"tare {made.uld.tare} kg")
+    click.echo(f"contents {made.contents_weight} kg")
+    click.echo(f"gross {made.gross_weight} kg of {made.uld.max_gross} kg")
+    click.echo(f"spare {made.uld.payload_capacity - made.contents_weight} kg")
+    click.echo(f"volume {made.volume} cbm")
+    click.echo(f"stackable {'yes' if made.stackable else 'no'}")
+    click.echo(f"dangerous goods {'yes' if made.dangerous else 'no'}")
+    click.echo(f"cargo aircraft only {'yes' if made.cargo_aircraft_only else 'no'}")
 
 
 @group.command("tonnage")
