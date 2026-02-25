@@ -31,6 +31,7 @@ jobs:
       - run: python -m holdtrim.tools.check_tests
       - run: python -m holdtrim.tools.check_help
       - run: python -m holdtrim.tools.check_wiring
+      - run: python -m holdtrim.tools.check_messages
 
   tests:
     runs-on: ubuntu-latest
