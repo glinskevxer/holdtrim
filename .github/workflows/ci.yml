@@ -33,6 +33,7 @@ jobs:
       - run: python -m holdtrim.tools.check_wiring
       - run: python -m holdtrim.tools.check_messages
       - run: python -m holdtrim.tools.build_docs --check
+      - run: python -m holdtrim.tools.schema_dump --check
 
   tests:
     runs-on: ubuntu-latest
