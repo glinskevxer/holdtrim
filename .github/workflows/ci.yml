@@ -35,6 +35,7 @@ jobs:
       - run: python -m holdtrim.tools.build_docs --check
       - run: python -m holdtrim.tools.schema_dump --check
       - run: python -m holdtrim.tools.build_glossary --check
+      - run: python -m holdtrim.tools.check_pins
 
   tests:
     runs-on: ubuntu-latest
