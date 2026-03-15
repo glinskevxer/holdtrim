@@ -34,6 +34,7 @@ jobs:
       - run: python -m holdtrim.tools.check_messages
       - run: python -m holdtrim.tools.build_docs --check
       - run: python -m holdtrim.tools.schema_dump --check
+      - run: python -m holdtrim.tools.build_glossary --check
 
   tests:
     runs-on: ubuntu-latest
