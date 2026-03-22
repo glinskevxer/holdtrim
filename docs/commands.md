@@ -353,6 +353,16 @@ Throw the plan away and start again.
 
 Arguments: `designator`, `day`
 
+### `holdtrim plan offload`
+
+Say what has to come off, and what it should be.
+
+Arguments: `designator`, `day`
+
+| option | what it does |
+| --- | --- |
+| `--priority` | What a position was promised, as POSITION=LEVEL. |
+
 ### `holdtrim plan pull`
 
 Take whatever is in a position back out.

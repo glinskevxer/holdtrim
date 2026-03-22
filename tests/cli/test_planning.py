@@ -12,9 +12,8 @@ def run(runner: CliRunner, book: Path, *args: str) -> Result:
 
 
 def planned(runner: CliRunner, book: Path, position: str = "11P", weight: str = "2000") -> Result:
-    return run(
-        runner,
-        book,
+    uld = {"11P": "PMC12345QH", "21P": "PMC12346QH"}.get(position, "")
+    args = [
         "plan",
         "put",
         "QH412",
@@ -22,11 +21,12 @@ def planned(runner: CliRunner, book: Path, position: str = "11P", weight: str = 
         position,
         "--weight",
         weight,
-        "--uld",
-        "PMC12345QH",
         "--to",
         "LGG",
-    )
+    ]
+    if uld:
+        args.extend(["--uld", uld])
+    return run(runner, book, *args)
 
 
 def test_an_empty_plan_says_so(runner: CliRunner, flight_book: Path) -> None:
@@ -109,6 +109,48 @@ def test_the_planner_says_what_it_could_not_place(runner: CliRunner, flight_book
 
 def test_a_load_that_is_not_a_pair_is_refused(runner: CliRunner, flight_book: Path) -> None:
     result = run(runner, flight_book, "plan", "auto", "QH412", "2025-05-12", "--load", "PMC12345QH")
+    assert result.exception is not None
+
+
+def test_a_flight_inside_its_limits_offloads_nothing(runner: CliRunner, flight_book: Path) -> None:
+    planned(runner, flight_book)
+    result = run(runner, flight_book, "plan", "offload", "QH412", "2025-05-12")
+    assert "is inside its limits" in result.output
+
+
+def test_an_overloaded_flight_says_what_comes_off(runner: CliRunner, flight_book: Path) -> None:
+    planned(runner, flight_book, "11P", "3175")
+    planned(runner, flight_book, "21P", "3175")
+    planned(runner, flight_book, "51", "3175")
+    run(runner, flight_book, "flight", "fuel", "QH412", "2025-05-12", "--takeoff", "1600")
+    result = run(runner, flight_book, "plan", "offload", "QH412", "2025-05-12")
+    assert "offload" in result.output
+    assert "kg more than needed" in result.output
+
+
+def test_the_promise_decides_what_goes_first(runner: CliRunner, flight_book: Path) -> None:
+    planned(runner, flight_book, "11P", "3175")
+    planned(runner, flight_book, "21P", "3175")
+    planned(runner, flight_book, "51", "3175")
+    run(runner, flight_book, "flight", "fuel", "QH412", "2025-05-12", "--takeoff", "1600")
+    result = run(
+        runner,
+        flight_book,
+        "plan",
+        "offload",
+        "QH412",
+        "2025-05-12",
+        "--priority",
+        "11P=3",
+        "--priority",
+        "51=0",
+    )
+    assert result.output.splitlines()[0].endswith("from 51, 3175 kg")
+
+
+def test_a_priority_that_is_not_a_pair_is_refused(runner: CliRunner, flight_book: Path) -> None:
+    planned(runner, flight_book)
+    result = run(runner, flight_book, "plan", "offload", "QH412", "2025-05-12", "--priority", "11P")
     assert result.exception is not None
 
 

@@ -10,6 +10,7 @@ from holdtrim.errors import DataError
 from holdtrim.office import Office
 from holdtrim.plan.allocate import Item, for_flight
 from holdtrim.plan.loadplan import Assignment
+from holdtrim.plan.offload import GENERAL, LEVELS, Candidate, for_balance
 from holdtrim.store import flights, plans, ulds
 
 
@@ -124,6 +125,53 @@ def auto(ctx: click.Context, designator: str, day: str, loads: tuple[str, ...]) 
         click.echo(f"left behind {item.label}: {reason}")
     if made.complete and made.plan.assignments:
         click.echo("everything offered was placed")
+
+
+def _priority(text: str) -> tuple[str, int]:
+    """Read a POSITION=LEVEL argument."""
+    position, separator, level = text.partition("=")
+    if not separator or not level.strip().isdigit():
+        raise DataError(f"{text!r} is not a position and a level, write it as POSITION=LEVEL")
+    wanted = int(level)
+    if wanted not in LEVELS:
+        raise DataError(f"{wanted} is not a priority, use one of {LEVELS}")
+    return position.strip().upper(), wanted
+
+
+@group.command("offload")
+@click.argument("designator")
+@click.argument("day")
+@click.option(
+    "--priority",
+    "priorities",
+    multiple=True,
+    help="What a position was promised, as POSITION=LEVEL.",
+)
+@click.pass_context
+def offload(ctx: click.Context, designator: str, day: str, priorities: tuple[str, ...]) -> None:
+    """Say what has to come off, and what it should be."""
+    promised = dict(_priority(entry) for entry in priorities)
+    with opened_book(ctx) as book:
+        file = Office(connection=book.connection).on(designator, parse_day(day))
+        candidates = tuple(
+            Candidate(
+                position=assignment.position,
+                weight=assignment.weight,
+                uld=assignment.uld,
+                priority=promised.get(assignment.position, GENERAL),
+            )
+            for assignment in file.plan.assignments
+        )
+        made = for_balance(file.balance(), candidates)
+    if not made.removed:
+        click.echo(f"{file.sector.reference} is inside its limits, nothing has to come off")
+        return
+    for candidate in made.removed:
+        click.echo(f"offload {candidate.describe()}")
+    click.echo(made.describe())
+    if not made.enough:
+        click.echo(f"still {made.short_by} kg over")
+        raise SystemExit(6)
 
 
 @group.command("check")
