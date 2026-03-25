@@ -381,6 +381,17 @@ Arguments: `designator`, `day`, `position`
 | `--uld` | The device, left out for loose cargo. |
 | `--to` | Where it comes off. |
 
+### `holdtrim plan sequence`
+
+The order to load in, checked step by step against the envelope.
+
+Arguments: `designator`, `day`
+
+| option | what it does |
+| --- | --- |
+| `--as-planned` | Use the order the plan is in. |
+| `--unload` | Give the order things come off in. |
+
 ### `holdtrim plan show`
 
 The plan as it stands.

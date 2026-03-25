@@ -11,6 +11,7 @@ from holdtrim.office import Office
 from holdtrim.plan.allocate import Item, for_flight
 from holdtrim.plan.loadplan import Assignment
 from holdtrim.plan.offload import GENERAL, LEVELS, Candidate, for_balance
+from holdtrim.plan.sequence import as_planned, instruction, outside, suggested, unloading, walk
 from holdtrim.store import flights, plans, ulds
 
 
@@ -171,6 +172,28 @@ def offload(ctx: click.Context, designator: str, day: str, priorities: tuple[str
     click.echo(made.describe())
     if not made.enough:
         click.echo(f"still {made.short_by} kg over")
+        raise SystemExit(6)
+
+
+@group.command("sequence")
+@click.argument("designator")
+@click.argument("day")
+@click.option("--as-planned", "keep_order", is_flag=True, help="Use the order the plan is in.")
+@click.option("--unload", is_flag=True, help="Give the order things come off in.")
+@click.pass_context
+def sequence(ctx: click.Context, designator: str, day: str, keep_order: bool, unload: bool) -> None:
+    """The order to load in, checked step by step against the envelope."""
+    with opened_book(ctx) as book:
+        file = Office(connection=book.connection).on(designator, parse_day(day))
+        order = as_planned(file.plan) if keep_order else suggested(file.kind, file.plan)
+        if unload:
+            order = unloading(order)
+        steps = walk(file.kind, file.tail, order)
+    for line in instruction(steps):
+        click.echo(line)
+    bad = outside(steps)
+    if bad:
+        click.echo(f"{len(bad)} step(s) leave the envelope")
         raise SystemExit(6)
 
 

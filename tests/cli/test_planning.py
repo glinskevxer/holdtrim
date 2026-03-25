@@ -154,6 +154,41 @@ def test_a_priority_that_is_not_a_pair_is_refused(runner: CliRunner, flight_book
     assert result.exception is not None
 
 
+def test_the_loading_sequence_prints_a_step_a_position(
+    runner: CliRunner, flight_book: Path
+) -> None:
+    planned(runner, flight_book, "11P", "2000")
+    planned(runner, flight_book, "51", "300")
+    result = run(runner, flight_book, "plan", "sequence", "QH412", "2025-05-12")
+    assert "1. 11P 2000 kg" in result.output
+    assert "2. 51 300 kg" in result.output
+
+
+def test_the_unloading_order_is_the_reverse(runner: CliRunner, flight_book: Path) -> None:
+    planned(runner, flight_book, "11P", "2000")
+    planned(runner, flight_book, "51", "300")
+    result = run(runner, flight_book, "plan", "sequence", "QH412", "2025-05-12", "--unload")
+    assert result.output.splitlines()[0].startswith("1. 51")
+
+
+def test_a_bad_order_leaves_the_envelope(runner: CliRunner, flight_book: Path) -> None:
+    planned(runner, flight_book, "51", "3000")
+    planned(runner, flight_book, "11P", "2500")
+    result = run(runner, flight_book, "plan", "sequence", "QH412", "2025-05-12", "--as-planned")
+    assert "OUTSIDE" in result.output
+    assert result.exit_code == 6
+
+
+def test_the_suggested_order_of_the_same_load_stays_inside(
+    runner: CliRunner, flight_book: Path
+) -> None:
+    planned(runner, flight_book, "51", "3000")
+    planned(runner, flight_book, "11P", "2500")
+    result = run(runner, flight_book, "plan", "sequence", "QH412", "2025-05-12")
+    assert "OUTSIDE" not in result.output
+    assert result.exit_code == 0
+
+
 def test_a_plan_can_be_thrown_away(runner: CliRunner, flight_book: Path) -> None:
     planned(runner, flight_book)
     result = run(runner, flight_book, "plan", "clear", "QH412", "2025-05-12")
