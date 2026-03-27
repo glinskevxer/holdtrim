@@ -288,6 +288,32 @@ MIGRATIONS: tuple[Migration, ...] = (
             "CREATE INDEX dangerous_goods_by_awb ON dangerous_goods (awb, un_number)",
         ),
     ),
+    Migration(
+        version=12,
+        name="issued loadsheets",
+        statements=(
+            """
+            CREATE TABLE loadsheet (
+                flight_key TEXT NOT NULL REFERENCES sector (key) ON DELETE CASCADE,
+                edition INTEGER NOT NULL,
+                issued_on TEXT NOT NULL,
+                prepared_by TEXT NOT NULL,
+                payload INTEGER NOT NULL,
+                zero_fuel_weight INTEGER NOT NULL,
+                takeoff_weight INTEGER NOT NULL,
+                landing_weight INTEGER NOT NULL,
+                underload INTEGER NOT NULL,
+                limited_by TEXT NOT NULL,
+                takeoff_index TEXT NOT NULL,
+                takeoff_percent_mac TEXT NOT NULL,
+                trim_setting TEXT NOT NULL,
+                lmc_weight INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY (flight_key, edition)
+            )
+            """,
+            "CREATE INDEX loadsheet_by_day ON loadsheet (issued_on)",
+        ),
+    ),
 )
 
 

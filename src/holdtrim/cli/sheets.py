@@ -13,7 +13,7 @@ from holdtrim.office import Office
 from holdtrim.plan.lmc import Change, Changes
 from holdtrim.sheet.loadsheet import after_changes
 from holdtrim.sheet.render import render
-from holdtrim.store import flights
+from holdtrim.store import flights, sheets
 
 
 def _change(text: str) -> Change:
@@ -74,19 +74,42 @@ def summary(ctx: click.Context, designator: str, day: str, prepared_by: str) -> 
 @click.argument("designator")
 @click.argument("day")
 @click.option("--by", "prepared_by", required=True, help="Who prepared it.")
-@click.option("--edition", type=int, default=1, show_default=True, help="Which edition.")
+@click.option("--on", default=None, help="The day it was issued, the flight day by default.")
 @click.pass_context
-def issue(ctx: click.Context, designator: str, day: str, prepared_by: str, edition: int) -> None:
-    """Check the sheet, close the flight, and say it may be handed over."""
+def issue(ctx: click.Context, designator: str, day: str, prepared_by: str, on: str | None) -> None:
+    """Check the sheet, record it, close the flight, and hand it over.
+
+    The edition is not asked for. It follows what has already been issued for
+    this flight, because an edition number typed in by hand is an edition
+    number that eventually repeats.
+    """
+    when = parse_day(day)
     with opened_book(ctx) as book:
         office = Office(connection=book.connection)
-        file = office.on(designator, parse_day(day))
+        file = office.on(designator, when)
         file.check_flyable()
+        edition = sheets.next_edition(book.connection, file.key)
         sheet = file.loadsheet(prepared_by, edition=edition).issue()
-        closed = replace(file.sector, status=CLOSED)
-        flights.save(book.connection, closed)
+        sheets.record(book.connection, sheets.from_sheet(sheet, parse_day(on) if on else when))
+        flights.save(book.connection, replace(file.sector, status=CLOSED))
     click.echo(f"issued {sheet.reference}")
     click.echo(sheet.summary())
+
+
+@group.command("history")
+@click.argument("designator")
+@click.argument("day")
+@click.pass_context
+def history(ctx: click.Context, designator: str, day: str) -> None:
+    """Every edition that has been issued for a flight."""
+    key = flights.key_for(designator, parse_day(day))
+    with opened_book(ctx) as book:
+        found = sheets.editions(book.connection, key)
+    if not found:
+        click.echo(f"no loadsheet has been issued for {key}")
+        return
+    for entry in found:
+        click.echo(entry.describe())
 
 
 @group.command("findings")

@@ -117,6 +117,26 @@ def test_a_sheet_with_a_finding_will_not_issue(runner: CliRunner, flight_book: P
     assert result.exception is not None
 
 
+def test_an_issued_sheet_goes_on_the_record(runner: CliRunner, flight_book: Path) -> None:
+    planned(runner, flight_book)
+    run(runner, flight_book, "sheet", "issue", "QH412", "2025-05-12", "--by", "K Ravn")
+    result = run(runner, flight_book, "sheet", "history", "QH412", "2025-05-12")
+    assert "edition 1 issued 2025-05-12 by K Ravn" in result.output
+
+
+def test_the_edition_follows_what_was_already_issued(runner: CliRunner, flight_book: Path) -> None:
+    planned(runner, flight_book)
+    run(runner, flight_book, "sheet", "issue", "QH412", "2025-05-12", "--by", "K Ravn")
+    run(runner, flight_book, "flight", "status", "QH412", "2025-05-12", "planned")
+    result = run(runner, flight_book, "sheet", "issue", "QH412", "2025-05-12", "--by", "K Ravn")
+    assert "edition 2" in result.output
+
+
+def test_a_flight_with_no_loadsheet_says_so(runner: CliRunner, flight_book: Path) -> None:
+    result = run(runner, flight_book, "sheet", "history", "QH412", "2025-05-12")
+    assert "no loadsheet has been issued" in result.output
+
+
 def test_the_findings_command_lists_what_is_in_the_way(
     runner: CliRunner, flight_book: Path
 ) -> None:

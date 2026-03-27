@@ -1,9 +1,10 @@
 -- The shape of the book after every migration.
--- Written by python -m holdtrim.tools.schema_dump at schema 11.
+-- Written by python -m holdtrim.tools.schema_dump at schema 12.
 
 CREATE INDEX consignment_by_route ON consignment (origin, destination, ready_on);
 CREATE INDEX dangerous_goods_by_awb ON dangerous_goods (awb, un_number);
 CREATE INDEX hold_position_by_type ON hold_position (type_code, ordinal);
+CREATE INDEX loadsheet_by_day ON loadsheet (issued_on);
 CREATE INDEX plan_assignment_by_uld ON plan_assignment (uld);
 CREATE INDEX sector_by_day ON sector (day, carrier, number);
 CREATE INDEX sector_by_tail ON sector (registration, day);
@@ -20,6 +21,7 @@ CREATE TABLE envelope_point ( type_code TEXT NOT NULL REFERENCES aircraft_type (
 CREATE TABLE fuel_point ( type_code TEXT NOT NULL REFERENCES aircraft_type (code) ON DELETE CASCADE, weight INTEGER NOT NULL, fuel_index TEXT NOT NULL, PRIMARY KEY (type_code, weight) );
 CREATE TABLE hold_position ( type_code TEXT NOT NULL REFERENCES aircraft_type (code) ON DELETE CASCADE, code TEXT NOT NULL, ordinal INTEGER NOT NULL, compartment TEXT NOT NULL, arm TEXT NOT NULL, max_weight INTEGER NOT NULL, length TEXT NOT NULL, width TEXT NOT NULL, max_running_load INTEGER NOT NULL, max_area_load INTEGER NOT NULL, accepts TEXT NOT NULL DEFAULT '', PRIMARY KEY (type_code, code) );
 CREATE TABLE load_plan ( flight_key TEXT PRIMARY KEY REFERENCES sector (key) ON DELETE CASCADE, edition INTEGER NOT NULL );
+CREATE TABLE loadsheet ( flight_key TEXT NOT NULL REFERENCES sector (key) ON DELETE CASCADE, edition INTEGER NOT NULL, issued_on TEXT NOT NULL, prepared_by TEXT NOT NULL, payload INTEGER NOT NULL, zero_fuel_weight INTEGER NOT NULL, takeoff_weight INTEGER NOT NULL, landing_weight INTEGER NOT NULL, underload INTEGER NOT NULL, limited_by TEXT NOT NULL, takeoff_index TEXT NOT NULL, takeoff_percent_mac TEXT NOT NULL, trim_setting TEXT NOT NULL, lmc_weight INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (flight_key, edition) );
 CREATE TABLE plan_assignment ( flight_key TEXT NOT NULL REFERENCES load_plan (flight_key) ON DELETE CASCADE, hold_position TEXT NOT NULL, ordinal INTEGER NOT NULL, weight INTEGER NOT NULL, uld TEXT NOT NULL DEFAULT '', destination TEXT NOT NULL DEFAULT '', PRIMARY KEY (flight_key, hold_position) );
 CREATE TABLE schema_migration ( version INTEGER PRIMARY KEY, name TEXT NOT NULL );
 CREATE TABLE sector ( key TEXT PRIMARY KEY, carrier TEXT NOT NULL, number INTEGER NOT NULL, suffix TEXT NOT NULL DEFAULT '', day TEXT NOT NULL, registration TEXT NOT NULL REFERENCES tail (registration), origin TEXT NOT NULL, destination TEXT NOT NULL, taxi_fuel INTEGER NOT NULL, trip_fuel INTEGER NOT NULL, takeoff_fuel INTEGER NOT NULL, crew INTEGER NOT NULL, freighter INTEGER NOT NULL, status TEXT NOT NULL );

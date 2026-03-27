@@ -458,16 +458,26 @@ Everything standing between this flight and a signed loadsheet.
 
 Arguments: `designator`, `day`
 
+### `holdtrim sheet history`
+
+Every edition that has been issued for a flight.
+
+Arguments: `designator`, `day`
+
 ### `holdtrim sheet issue`
 
-Check the sheet, close the flight, and say it may be handed over.
+Check the sheet, record it, close the flight, and hand it over.
+
+    The edition is not asked for. It follows what has already been issued for
+    this flight, because an edition number typed in by hand is an edition
+    number that eventually repeats.
 
 Arguments: `designator`, `day`
 
 | option | what it does |
 | --- | --- |
 | `--by` | Who prepared it. |
-| `--edition` | Which edition. |
+| `--on` | The day it was issued, the flight day by default. |
 
 ### `holdtrim sheet print`
 
