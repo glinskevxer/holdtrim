@@ -8,8 +8,8 @@ import click
 
 from holdtrim.cli.common import echo_table, opened_book, parse_day
 from holdtrim.errors import DataError
-from holdtrim.report import capacity, stock
-from holdtrim.store import export, importer
+from holdtrim.report import audit, capacity, stock
+from holdtrim.store import export, flights, importer
 
 
 @click.group("report")
@@ -115,6 +115,18 @@ def day_report(ctx: click.Context, day: str) -> None:
         click.echo(f"carried {capacity.carried(report)} kg, spare {capacity.spare(report)} kg")
         for limit, times in capacity.limits_biting(report).items():
             click.echo(f"limited by {limit} on {times} flight(s)")
+
+
+@group.command("flight")
+@click.argument("designator")
+@click.argument("day")
+@click.pass_context
+def flight_file(ctx: click.Context, designator: str, day: str) -> None:
+    """Everything the book holds about one flight."""
+    key = flights.key_for(designator, parse_day(day))
+    with opened_book(ctx) as book:
+        trail = audit.gather(book.connection, key)
+    click.echo(audit.render(trail), nl=False)
 
 
 @group.command("export")

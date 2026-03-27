@@ -424,6 +424,12 @@ Write the whole book out as CSV.
 
 Arguments: `destination`
 
+### `holdtrim report flight`
+
+Everything the book holds about one flight.
+
+Arguments: `designator`, `day`
+
 ### `holdtrim report import`
 
 Read a booking file in, reporting the rows that would not go.

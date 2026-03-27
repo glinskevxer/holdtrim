@@ -67,6 +67,14 @@ def test_a_day_with_nothing_flying_says_so(runner: CliRunner, flight_book: Path)
     )
 
 
+def test_the_flight_file_prints(runner: CliRunner, flight_book: Path) -> None:
+    planned(runner, flight_book)
+    result = run(runner, flight_book, "report", "flight", "QH412", "2025-05-12")
+    assert "FLIGHT FILE QH412/2025-05-12" in result.output
+    assert "11P PMC12345QH 2000 kg" in result.output
+    assert "LOADSHEETS ISSUED" in result.output
+
+
 def test_the_book_exports_to_csv(runner: CliRunner, flight_book: Path, tmp_path: Path) -> None:
     out = tmp_path / "out"
     result = run(runner, flight_book, "report", "export", str(out))
