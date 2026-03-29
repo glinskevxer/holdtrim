@@ -94,7 +94,7 @@ def test_something_unstackable_may_not_go_on_top_either() -> None:
         put(made, consignment(2000004, handling=("AVI",)))
 
 
-def test_an_unstackable_consignment_on_its_own_is_fine() -> None:
+def test_an_unstackable_consignment_on_its_own_is_accepted() -> None:
     made = build(device(), (consignment(handling=("NST",)),))
     assert not made.stackable
     assert made.pieces == 8

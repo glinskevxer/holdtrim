@@ -112,7 +112,7 @@ def test_the_underload_and_the_limiting_weight_come_off_the_balance() -> None:
     assert made.limiting_weight in {"zero fuel", "takeoff", "landing"}
 
 
-def test_a_good_sheet_is_signable_and_issues() -> None:
+def test_a_sheet_with_no_findings_is_signable_and_issues() -> None:
     made = sheet()
     assert made.findings == ()
     assert made.signable

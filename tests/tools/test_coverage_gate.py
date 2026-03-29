@@ -62,19 +62,19 @@ def test_a_low_total_is_reported() -> None:
     assert "coverage is 50.00 percent" in found[0]
 
 
-def test_one_bad_file_behind_good_ones_is_reported() -> None:
+def test_one_low_file_behind_covered_ones_is_reported() -> None:
     covered = report(**{"a.py": 100.0, "b.py": 100.0, "c.py": 100.0, "d.py": 40.0})
     found = coverage_gate.problems(covered, floor=80.0, file_floor=85.0)
     assert len(found) == 1
     assert "d.py is 40.00 percent" in found[0]
 
 
-def test_the_gate_passes_a_good_report(tmp_path: Path) -> None:
+def test_the_gate_passes_a_report_above_the_floors(tmp_path: Path) -> None:
     path = written(tmp_path)
     assert coverage_gate.main(["--report", str(path)]) == 0
 
 
-def test_the_gate_fails_a_bad_report(tmp_path: Path) -> None:
+def test_the_gate_fails_a_report_under_a_floor(tmp_path: Path) -> None:
     path = written(tmp_path, **{"a.py": 40.0})
     assert coverage_gate.main(["--report", str(path), "--floor", "95", "--file-floor", "85"]) == 1
 

@@ -63,7 +63,7 @@ def test_a_position_can_be_pulled_back_out(runner: CliRunner, flight_book: Path)
     assert "nothing is planned" in result.output
 
 
-def test_a_good_plan_passes_every_check(runner: CliRunner, flight_book: Path) -> None:
+def test_a_legal_plan_passes_every_check(runner: CliRunner, flight_book: Path) -> None:
     planned(runner, flight_book)
     result = run(runner, flight_book, "plan", "check", "QH412", "2025-05-12")
     assert "passes every check" in result.output

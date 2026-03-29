@@ -8,7 +8,7 @@ def test_the_two_files_agree() -> None:
     assert problems() == []
 
 
-def test_the_check_passes() -> None:
+def test_the_check_passes_over_this_package() -> None:
     assert check_pins.main() == 0
 
 

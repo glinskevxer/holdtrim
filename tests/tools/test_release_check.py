@@ -9,7 +9,7 @@ def test_the_version_agrees_everywhere() -> None:
     assert problems() == []
 
 
-def test_the_check_passes() -> None:
+def test_the_check_passes_over_this_package() -> None:
     assert release_check.main() == 0
 
 

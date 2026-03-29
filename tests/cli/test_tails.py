@@ -45,7 +45,7 @@ def test_an_aeroplane_goes_on_the_fleet(runner: CliRunner, fleet_book: Path) -> 
     assert "added OY-JAF AT7F DOW 13640 kg" in result.output
 
 
-def test_the_fleet_lists(runner: CliRunner, fleet_book: Path) -> None:
+def test_the_fleet_lists_every_aeroplane(runner: CliRunner, fleet_book: Path) -> None:
     added(runner, fleet_book)
     result = run(runner, fleet_book, "tail", "list")
     assert "OY-JAF" in result.output

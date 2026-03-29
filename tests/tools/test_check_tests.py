@@ -10,7 +10,7 @@ def test_every_module_is_named_by_a_test() -> None:
     assert problems() == []
 
 
-def test_the_check_passes() -> None:
+def test_the_check_passes_over_this_package() -> None:
     assert check_tests.main() == 0
 
 

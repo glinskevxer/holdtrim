@@ -83,7 +83,7 @@ def test_an_illegal_plan_is_not_legal() -> None:
     assert not limits.legal(balance({"11P": 3400}))
 
 
-def test_the_worst_margin_is_positive_on_a_good_plan() -> None:
+def test_the_worst_margin_is_positive_inside_the_envelope() -> None:
     assert limits.worst_margin(balance({"11P": 2000})) > Decimal("0")
 
 

@@ -29,7 +29,7 @@ def planned(runner: CliRunner, book: Path, weight: str = "2000") -> None:
     )
 
 
-def test_the_sheet_prints(runner: CliRunner, flight_book: Path) -> None:
+def test_the_sheet_prints_for_a_planned_flight(runner: CliRunner, flight_book: Path) -> None:
     planned(runner, flight_book)
     result = run(runner, flight_book, "sheet", "print", "QH412", "2025-05-12", "--by", "K Ravn")
     assert "LOADSHEET" in result.output
@@ -103,7 +103,7 @@ def test_the_summary_is_one_line(runner: CliRunner, flight_book: Path) -> None:
     assert "ZFW 15640" in result.output
 
 
-def test_a_good_sheet_issues_and_closes_the_flight(runner: CliRunner, flight_book: Path) -> None:
+def test_a_legal_sheet_issues_and_closes_the_flight(runner: CliRunner, flight_book: Path) -> None:
     planned(runner, flight_book)
     result = run(runner, flight_book, "sheet", "issue", "QH412", "2025-05-12", "--by", "K Ravn")
     assert "issued QH412/12 OY-JAF edition 1" in result.output

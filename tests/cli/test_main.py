@@ -119,7 +119,7 @@ def test_the_entry_point_reports_a_bad_command(monkeypatch: pytest.MonkeyPatch) 
     assert raised.value.code != 0
 
 
-def test_the_entry_point_handles_being_stopped(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_the_entry_point_exits_one_thirty_when_stopped(monkeypatch: pytest.MonkeyPatch) -> None:
     def abort() -> None:
         raise click.Abort
 

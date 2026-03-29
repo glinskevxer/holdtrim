@@ -43,7 +43,7 @@ def test_a_waybill_goes_on_file(runner: CliRunner, book: Path) -> None:
     assert "booked 125-12345675 BLLLGG 8/1240" in result.output
 
 
-def test_the_file_lists(runner: CliRunner, book: Path) -> None:
+def test_the_file_lists_what_is_on_it(runner: CliRunner, book: Path) -> None:
     prepared(runner, book)
     booked(runner, book)
     result = run(runner, book, "cargo", "list")

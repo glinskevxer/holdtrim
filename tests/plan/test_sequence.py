@@ -69,7 +69,7 @@ def test_the_same_load_in_a_better_order_stays_inside() -> None:
     assert outside(steps) == ()
 
 
-def test_the_suggested_order_works_from_both_ends_inwards() -> None:
+def test_the_suggested_order_runs_from_both_ends_inwards() -> None:
     loaded = plan(**{"11P": 900, "21P": 900, "51": 900})
     order = [entry.position for entry in suggested(a_type(), loaded)]
     assert order == ["11P", "51", "21P"]

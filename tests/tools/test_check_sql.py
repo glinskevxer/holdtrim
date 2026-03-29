@@ -17,7 +17,7 @@ def test_nothing_in_the_package_formats_a_value_into_a_statement() -> None:
     assert problems() == []
 
 
-def test_the_check_passes() -> None:
+def test_the_check_passes_over_this_package() -> None:
     assert check_sql.main() == 0
 
 

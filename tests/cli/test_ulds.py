@@ -33,7 +33,7 @@ def test_a_device_goes_on_the_register(runner: CliRunner, book: Path) -> None:
     assert "added PMC12345QH tare 110 max 4626 BLL serviceable" in result.output
 
 
-def test_the_register_lists(runner: CliRunner, book: Path) -> None:
+def test_the_register_lists_every_device(runner: CliRunner, book: Path) -> None:
     run(runner, book, "init")
     added(runner, book, at="BLL")
     result = run(runner, book, "uld", "list")

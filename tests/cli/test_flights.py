@@ -59,7 +59,7 @@ def test_a_flight_goes_on_file(runner: CliRunner, fleet_book: Path) -> None:
     assert "filed QH412/12 BLLLGG OY-JAF fuel 2600/1450 (planned)" in result.output
 
 
-def test_the_file_lists(runner: CliRunner, fleet_book: Path) -> None:
+def test_the_file_lists_what_is_on_it(runner: CliRunner, fleet_book: Path) -> None:
     filed(runner, fleet_book)
     result = run(runner, fleet_book, "flight", "list")
     assert "QH412" in result.output

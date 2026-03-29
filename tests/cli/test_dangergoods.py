@@ -103,7 +103,7 @@ def test_a_declaration_against_a_waybill_that_is_not_on_file_is_refused(
     assert declared(runner, flight_book).exception is not None
 
 
-def test_the_declarations_list(runner: CliRunner, flight_book: Path) -> None:
+def test_the_declarations_list_for_every_waybill(runner: CliRunner, flight_book: Path) -> None:
     booked(runner, flight_book)
     declared(runner, flight_book)
     result = run(runner, flight_book, "danger", "list")
@@ -160,7 +160,7 @@ def test_a_place_that_is_not_a_pair_is_refused(runner: CliRunner, flight_book: P
     assert result.exception is not None
 
 
-def test_the_notice_prints(runner: CliRunner, flight_book: Path) -> None:
+def test_the_notice_prints_for_the_placed_goods(runner: CliRunner, flight_book: Path) -> None:
     booked(runner, flight_book)
     declared(runner, flight_book)
     planned(runner, flight_book)

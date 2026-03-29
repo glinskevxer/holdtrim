@@ -20,7 +20,7 @@ def conn(tmp_path: Path) -> Iterator[sqlite3.Connection]:
         yield connection
 
 
-def test_a_good_file_reads_clean() -> None:
+def test_a_file_with_no_bad_rows_reads_clean() -> None:
     outcome = importer.read(GOOD)
     assert outcome.clean
     assert outcome.accepted[0].awb.serial == 1234567
@@ -63,7 +63,7 @@ def test_a_bad_weight_is_reported() -> None:
     assert importer.read(text).rejected[0].line == 2
 
 
-def test_one_bad_row_does_not_stop_the_good_ones() -> None:
+def test_one_bad_row_does_not_stop_the_readable_ones() -> None:
     text = (
         f"{HEADER}\n"
         "125-12345674,BLL,LGG,8,1240,4.2,parts,2025-05-12,\n"

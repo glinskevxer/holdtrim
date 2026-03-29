@@ -87,7 +87,7 @@ def test_a_weight_can_be_written_with_a_unit() -> None:
     assert parse_weight("1200 KG") == 1200
 
 
-def test_tonnes_become_kilos() -> None:
+def test_tonnes_become_whole_kilos() -> None:
     assert parse_weight("1.2t") == 1200
     assert parse_weight("0.5 T") == 500
 
@@ -98,7 +98,7 @@ def test_weights_group_with_spaces_for_a_printed_report() -> None:
     assert format_kilos(1234567) == "1 234 567"
 
 
-def test_weights_add_up() -> None:
+def test_whole_weights_add_up() -> None:
     assert sum_kilos([1200, 340, 0]) == 1540
     assert sum_kilos([]) == 0
 

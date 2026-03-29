@@ -6,7 +6,7 @@ def test_every_module_is_reached_from_something_that_runs() -> None:
     assert problems() == []
 
 
-def test_the_check_passes() -> None:
+def test_the_check_passes_over_this_package() -> None:
     assert check_wiring.main() == 0
 
 

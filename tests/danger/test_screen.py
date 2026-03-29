@@ -84,7 +84,7 @@ def test_the_same_classes_in_devices_are_not_a_separation_problem() -> None:
     assert screen.between_positions(held, a_type().layout) == ()
 
 
-def test_positions_that_are_not_neighbours_are_fine_loose() -> None:
+def test_positions_that_are_not_neighbours_may_hold_both_loose() -> None:
     held = (
         placed("11P", "3", in_device=False),
         placed("51", "5.1", awb="125-20000048", in_device=False),
@@ -139,7 +139,7 @@ def test_one_four_s_may_share_a_position() -> None:
     assert screen.explosives(held) == ()
 
 
-def test_an_explosive_on_its_own_is_fine() -> None:
+def test_an_explosive_alone_in_a_position_is_accepted() -> None:
     held = (placed("11P", "1.4G", entries=(entry("1.4G", packing_group=""),)),)
     assert screen.explosives(held) == ()
 

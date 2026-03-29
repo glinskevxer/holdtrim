@@ -23,7 +23,7 @@ def test_the_unknown_codes_come_back_upper_case() -> None:
     assert handling.unknown(("per", "zzz", "qqq")) == ("ZZZ", "QQQ")
 
 
-def test_a_list_of_good_codes_reports_nothing_unknown() -> None:
+def test_a_list_of_known_codes_reports_nothing_unknown() -> None:
     assert handling.unknown(("PER", "EAT")) == ()
 
 

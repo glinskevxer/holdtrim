@@ -37,6 +37,7 @@ jobs:
       - run: python -m holdtrim.tools.build_glossary --check
       - run: python -m holdtrim.tools.check_pins
       - run: python -m holdtrim.tools.release_check
+      - run: python -m holdtrim.tools.check_naming
 
   tests:
     runs-on: ubuntu-latest

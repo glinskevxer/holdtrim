@@ -11,7 +11,7 @@ def test_nothing_in_the_package_reads_the_clock() -> None:
     assert problems() == []
 
 
-def test_the_check_passes() -> None:
+def test_the_check_passes_over_this_package() -> None:
     assert check_clock.main() == 0
 
 
@@ -41,7 +41,9 @@ def test_importing_time_is_found(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     assert "which is a clock" in problems()[0]
 
 
-def test_a_day_passed_in_is_fine(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_a_day_passed_in_as_an_argument_is_accepted(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     good = tmp_path / "good.py"
     good.write_text(
         '"""A file."""\n\nfrom datetime import date\n\n\ndef due(on: date) -> date:\n'

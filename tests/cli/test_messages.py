@@ -33,7 +33,7 @@ def wire(*args: str) -> list[str]:
     return ["--to", "LGGKLQH", "--from", "BLLLDQH", "--filed", "121815", *args]
 
 
-def test_the_ldm_prints(runner: CliRunner, flight_book: Path) -> None:
+def test_the_ldm_prints_for_the_planned_load(runner: CliRunner, flight_book: Path) -> None:
     planned(runner, flight_book)
     result = run(runner, flight_book, "message", "ldm", "QH412", "2025-05-12", *wire())
     assert "LDM" in result.output

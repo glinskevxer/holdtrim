@@ -10,7 +10,7 @@ def test_every_command_and_option_explains_itself() -> None:
     assert problems() == []
 
 
-def test_the_check_passes() -> None:
+def test_the_check_passes_over_this_package() -> None:
     assert check_help.main() == 0
 
 
