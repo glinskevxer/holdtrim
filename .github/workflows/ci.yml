@@ -39,6 +39,7 @@ jobs:
       - run: python -m holdtrim.tools.release_check
       - run: python -m holdtrim.tools.check_naming
       - run: python -m holdtrim.tools.check_fixtures
+      - run: python -m holdtrim.tools.check_workflow
 
   tests:
     runs-on: ubuntu-latest
