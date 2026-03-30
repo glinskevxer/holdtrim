@@ -38,6 +38,7 @@ jobs:
       - run: python -m holdtrim.tools.check_pins
       - run: python -m holdtrim.tools.release_check
       - run: python -m holdtrim.tools.check_naming
+      - run: python -m holdtrim.tools.check_fixtures
 
   tests:
     runs-on: ubuntu-latest
