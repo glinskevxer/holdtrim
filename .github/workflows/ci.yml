@@ -40,6 +40,7 @@ jobs:
       - run: python -m holdtrim.tools.check_naming
       - run: python -m holdtrim.tools.check_fixtures
       - run: python -m holdtrim.tools.check_workflow
+      - run: python -m holdtrim.tools.check_readme
 
   tests:
     runs-on: ubuntu-latest
