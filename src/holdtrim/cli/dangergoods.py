@@ -15,6 +15,7 @@ import click
 from holdtrim.cli.common import echo_table, opened_book, parse_day
 from holdtrim.danger import screen
 from holdtrim.danger.notoc import Notoc, render
+from holdtrim.danger.quantity import table
 from holdtrim.danger.screen import Placement
 from holdtrim.danger.table import CLASS_NAMES, class_name
 from holdtrim.errors import DataError
@@ -45,6 +46,13 @@ def classes() -> None:
         [[hazard, name] for hazard, name in sorted(CLASS_NAMES.items())],
         empty="no classes",
     )
+
+
+@group.command("limits")
+def limits() -> None:
+    """How much of each class may be in one package."""
+    for line in table():
+        click.echo(line)
 
 
 @group.command("declare")

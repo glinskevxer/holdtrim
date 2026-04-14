@@ -20,6 +20,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal
 
+from holdtrim.danger.quantity import check as quantity_check
 from holdtrim.danger.table import class_name, conflicts, is_explosive_exception, separation_for
 from holdtrim.findings import STOP, WATCH, Finding
 from holdtrim.model.danger import DangerousGoods
@@ -212,12 +213,27 @@ def explosives(placements: tuple[Placement, ...]) -> tuple[Finding, ...]:
     return tuple(found)
 
 
+def quantities(placements: tuple[Placement, ...], *, freighter: bool) -> tuple[Finding, ...]:
+    """Every declared line against the quantity one package may hold."""
+    found: list[Finding] = []
+    for placement in placements:
+        found.extend(
+            quantity_check(
+                placement.entries,
+                freighter=freighter,
+                where=f"{placement.position} {placement.awb}",
+            )
+        )
+    return tuple(found)
+
+
 def screen(
     placements: tuple[Placement, ...], layout: HoldLayout, *, freighter: bool = True
 ) -> tuple[Finding, ...]:
     """Every dangerous goods check, all of them run."""
     return (
         *on_this_aeroplane(placements, freighter=freighter),
+        *quantities(placements, freighter=freighter),
         *within_positions(placements),
         *between_positions(placements, layout),
         *radioactivity(placements),

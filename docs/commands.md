@@ -130,6 +130,10 @@ Arguments: `awb`
 | `--cao` | Cargo aircraft only. |
 | `--ti` | Transport index, for class 7. |
 
+### `holdtrim danger limits`
+
+How much of each class may be in one package.
+
 ### `holdtrim danger list`
 
 Everything declared, or everything on one waybill.

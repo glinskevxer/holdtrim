@@ -155,3 +155,15 @@ def test_a_clean_load_screens_acceptable() -> None:
     found = screen.screen((placed("11P", "3"),), a_type().layout)
     assert found == ()
     assert screen.acceptable(found)
+
+
+def test_a_package_over_its_quantity_limit_is_screened_out() -> None:
+    held = (placed("11P", entries=(entry("3", net_quantity=Decimal("90")),)),)
+    found = screen.quantities(held, freighter=True)
+    assert found[0].check == "quantity"
+
+
+def test_the_quantity_check_runs_as_part_of_the_screen() -> None:
+    held = (placed("11P", entries=(entry("3", net_quantity=Decimal("90")),)),)
+    found = screen.screen(held, a_type().layout, freighter=True)
+    assert any(finding.check == "quantity" for finding in found)
