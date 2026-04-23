@@ -120,3 +120,65 @@ def test_a_bad_address_is_refused(runner: CliRunner, flight_book: Path) -> None:
 
 def test_the_group_is_registered_under_its_name() -> None:
     assert cli.commands["message"] is messages.group
+
+
+def test_the_departure_message_prints(runner: CliRunner, flight_book: Path) -> None:
+    result = run(
+        runner,
+        flight_book,
+        "message",
+        "mvt",
+        "QH412",
+        "2025-05-12",
+        *wire("--off-blocks", "1815", "--airborne", "1830", "--eta", "1930"),
+    )
+    assert "MVT" in result.output
+    assert "AD1815/1830 EA1930 LGG" in result.output
+
+
+def test_a_delay_reaches_the_departure_message(runner: CliRunner, flight_book: Path) -> None:
+    result = run(
+        runner,
+        flight_book,
+        "message",
+        "mvt",
+        "QH412",
+        "2025-05-12",
+        *wire(
+            "--off-blocks",
+            "1815",
+            "--airborne",
+            "1830",
+            "--eta",
+            "1930",
+            "--delay",
+            "41/25",
+        ),
+    )
+    assert "DL41/0025" in result.output
+
+
+def test_the_arrival_message_prints(runner: CliRunner, flight_book: Path) -> None:
+    result = run(
+        runner,
+        flight_book,
+        "message",
+        "mvt",
+        "QH412",
+        "2025-05-12",
+        *wire("--touchdown", "1928", "--on-blocks", "1935"),
+    )
+    assert "AA1928/1935" in result.output
+
+
+def test_a_delay_that_is_not_a_pair_is_refused(runner: CliRunner, flight_book: Path) -> None:
+    result = run(
+        runner,
+        flight_book,
+        "message",
+        "mvt",
+        "QH412",
+        "2025-05-12",
+        *wire("--off-blocks", "1815", "--airborne", "1830", "--eta", "1930", "--delay", "41"),
+    )
+    assert result.exception is not None

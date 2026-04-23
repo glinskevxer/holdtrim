@@ -305,6 +305,24 @@ Arguments: `designator`, `day`
 | `--filed` | Filing time as DDHHMM. |
 | `--by` | Who prepared the figures. |
 
+### `holdtrim message mvt`
+
+The movement message, on departure or on arrival.
+
+Arguments: `designator`, `day`
+
+| option | what it does |
+| --- | --- |
+| `--off-blocks` | Time off blocks, as HHMM. |
+| `--airborne` | Time airborne, as HHMM. |
+| `--eta` | Estimated arrival, as HHMM. |
+| `--touchdown` | Time on the runway, as HHMM. |
+| `--on-blocks` | Time on stand, as HHMM. |
+| `--delay` | A delay, as CODE/MINUTES. |
+| `--to` | Teletype address. |
+| `--from` | Our own teletype address. |
+| `--filed` | Filing time as DDHHMM. |
+
 ### `holdtrim message plan`
 
 The LDM and the CPM together, which is what actually gets sent.

@@ -12,7 +12,8 @@ import click
 
 from holdtrim.cli.common import opened_book, parse_day
 from holdtrim.errors import DataError
-from holdtrim.message import cpm, ldm, ucm
+from holdtrim.message import cpm, ldm, mvt, ucm
+from holdtrim.message.mvt import Arrival, Departure, delay
 from holdtrim.message.ucm import DeviceMovement
 from holdtrim.office import Office
 
@@ -110,6 +111,68 @@ def uld_control(
         file.sector,
         movements,
         station=file.sector.origin,
+        addresses=addresses,
+        origin=origin,
+        filed=filed,
+    )
+    click.echo(message.render(), nl=False)
+
+
+def _delay(text: str) -> tuple[str, int]:
+    """Read a CODE/MINUTES argument."""
+    code, separator, minutes = text.partition("/")
+    if not separator or not minutes.strip().isdigit():
+        raise DataError(f"{text!r} is not a delay, write it as CODE/MINUTES")
+    return delay(code, int(minutes))
+
+
+@group.command("mvt")
+@click.argument("designator")
+@click.argument("day")
+@click.option("--off-blocks", default="", help="Time off blocks, as HHMM.")
+@click.option("--airborne", default="", help="Time airborne, as HHMM.")
+@click.option("--eta", default="", help="Estimated arrival, as HHMM.")
+@click.option("--touchdown", default="", help="Time on the runway, as HHMM.")
+@click.option("--on-blocks", default="", help="Time on stand, as HHMM.")
+@click.option("--delay", "delays", multiple=True, help="A delay, as CODE/MINUTES.")
+@click.option("--to", "addresses", multiple=True, required=True, help="Teletype address.")
+@click.option("--from", "origin", required=True, help="Our own teletype address.")
+@click.option("--filed", required=True, help="Filing time as DDHHMM.")
+@click.pass_context
+def movement(
+    ctx: click.Context,
+    designator: str,
+    day: str,
+    off_blocks: str,
+    airborne: str,
+    eta: str,
+    touchdown: str,
+    on_blocks: str,
+    delays: tuple[str, ...],
+    addresses: tuple[str, ...],
+    origin: str,
+    filed: str,
+) -> None:
+    """The movement message, on departure or on arrival."""
+    with opened_book(ctx) as book:
+        file = Office(connection=book.connection).on(designator, parse_day(day))
+    reported: Departure | Arrival
+    if touchdown or on_blocks:
+        reported = Arrival(touchdown=touchdown, on_blocks=on_blocks)
+        station = file.sector.destination
+    else:
+        reported = Departure(
+            off_blocks=off_blocks,
+            airborne=airborne,
+            estimated_arrival=eta,
+            arrival_station=file.sector.destination,
+            delays=tuple(_delay(entry) for entry in delays),
+        )
+        station = file.sector.origin
+    message = mvt.build(
+        file.sector,
+        reported,
+        station=station,
         addresses=addresses,
         origin=origin,
         filed=filed,
