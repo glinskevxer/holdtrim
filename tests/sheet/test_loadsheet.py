@@ -26,17 +26,19 @@ def tail() -> Tail:
     )
 
 
-def sector() -> Sector:
-    return Sector(
-        designator=Flight(carrier="QH", number=412),
-        day=date(2025, 5, 12),
-        registration="OY-JAF",
-        origin="BLL",
-        destination="LGG",
-        taxi_fuel=90,
-        trip_fuel=1450,
-        takeoff_fuel=2600,
-    )
+def sector(**changes: object) -> Sector:
+    fields: dict[str, object] = {
+        "designator": Flight(carrier="QH", number=412),
+        "day": date(2025, 5, 12),
+        "registration": "OY-JAF",
+        "origin": "BLL",
+        "destination": "LGG",
+        "taxi_fuel": 90,
+        "trip_fuel": 1450,
+        "takeoff_fuel": 2600,
+    }
+    fields.update(changes)
+    return Sector(**fields)  # type: ignore[arg-type]
 
 
 def sheet(weights: dict[str, int] | None = None, **changes: object) -> Loadsheet:

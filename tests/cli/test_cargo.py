@@ -175,3 +175,16 @@ def test_a_waybill_can_come_off_file(runner: CliRunner, book: Path) -> None:
 
 def test_the_group_is_registered_under_its_name() -> None:
     assert cli.commands["cargo"] is cargo.group
+
+
+def test_a_waybill_may_go_on_a_flight(runner: CliRunner, flight_book: Path) -> None:
+    booked(runner, flight_book, ready="2025-05-11")
+    result = run(runner, flight_book, "cargo", "accept", "125-12345675", "QH412", "2025-05-12")
+    assert "may go on QH412/12" in result.output
+
+
+def test_a_waybill_ready_too_late_is_refused(runner: CliRunner, flight_book: Path) -> None:
+    booked(runner, flight_book, ready="2025-05-14")
+    result = run(runner, flight_book, "cargo", "accept", "125-12345675", "QH412", "2025-05-12")
+    assert "ready 2 day(s) after" in result.output
+    assert result.exit_code == 6

@@ -37,6 +37,12 @@ Check the file over and report anything wrong with it.
 
 The consignments waiting to fly.
 
+### `holdtrim cargo accept`
+
+Whether a waybill may go on a flight tonight.
+
+Arguments: `awb`, `designator`, `day`
+
 ### `holdtrim cargo book`
 
 Put a waybill on file.
