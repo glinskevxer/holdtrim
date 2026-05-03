@@ -29,6 +29,27 @@ Arguments: `destination`
 
 How many rows are in each table worth counting.
 
+### `holdtrim book indexes`
+
+Every index the book carries.
+
+### `holdtrim book prune`
+
+Take old flights and their movements out of the book.
+
+| option | what it does |
+| --- | --- |
+| `--before` | Take out everything older than this day. |
+| `--dry-run` | Say what would go without taking it. |
+
+### `holdtrim book sizes`
+
+How big each table is, and the file itself.
+
+### `holdtrim book tidy`
+
+Work out the statistics and give back the space deleted rows left.
+
 ### `holdtrim book verify`
 
 Check the file over and report anything wrong with it.

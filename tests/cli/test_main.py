@@ -139,3 +139,27 @@ def test_a_book_with_a_dangling_reference_will_not_verify(runner: CliRunner, boo
     result = run(runner, book, "book", "verify")
     assert result.exit_code == 7
     assert "problem:" in result.output
+
+
+def test_the_sizes_list_the_tables(runner: CliRunner, book: Path) -> None:
+    run(runner, book, "init")
+    result = run(runner, book, "book", "sizes")
+    assert "station 0 row(s)" in result.output
+    assert "bytes on disk" in result.output
+
+
+def test_the_indexes_list_by_name(runner: CliRunner, book: Path) -> None:
+    run(runner, book, "init")
+    assert "station_by_name" in run(runner, book, "book", "indexes").output
+
+
+def test_tidying_leaves_the_book_sound(runner: CliRunner, book: Path) -> None:
+    run(runner, book, "init")
+    assert "tidied" in run(runner, book, "book", "tidy").output
+    assert "sound" in run(runner, book, "book", "verify").output
+
+
+def test_a_book_with_nothing_old_prunes_nothing(runner: CliRunner, book: Path) -> None:
+    run(runner, book, "init")
+    result = run(runner, book, "book", "prune", "--before", "2020-01-01")
+    assert "nothing in the book is older" in result.output

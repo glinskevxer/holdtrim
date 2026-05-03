@@ -26,9 +26,11 @@ from holdtrim.cli.common import (
     Settings,
     exit_code_for,
     opened_book,
+    parse_day,
     settings,
 )
 from holdtrim.errors import HoldtrimError
+from holdtrim.store import maintenance
 from holdtrim.store.book import initialise
 
 
@@ -115,6 +117,56 @@ cli.add_command(sheets.group)
 cli.add_command(stations.group)
 cli.add_command(tails.group)
 cli.add_command(ulds.group)
+
+
+@book.command("sizes")
+@click.pass_context
+def book_sizes(ctx: click.Context) -> None:
+    """How big each table is, and the file itself."""
+    with opened_book(ctx) as opened:
+        for size in maintenance.sizes(opened.connection):
+            click.echo(size.describe())
+        click.echo(f"{maintenance.file_size(opened.path)} bytes on disk")
+
+
+@book.command("indexes")
+@click.pass_context
+def book_indexes(ctx: click.Context) -> None:
+    """Every index the book carries."""
+    with opened_book(ctx) as opened:
+        for name in maintenance.index_names(opened.connection):
+            click.echo(name)
+
+
+@book.command("tidy")
+@click.pass_context
+def book_tidy(ctx: click.Context) -> None:
+    """Work out the statistics and give back the space deleted rows left."""
+    with opened_book(ctx) as opened:
+        maintenance.analyse(opened.connection)
+        maintenance.vacuum(opened.connection)
+        click.echo(f"tidied, {maintenance.file_size(opened.path)} bytes on disk")
+
+
+@book.command("prune")
+@click.option("--before", required=True, help="Take out everything older than this day.")
+@click.option("--dry-run", is_flag=True, help="Say what would go without taking it.")
+@click.pass_context
+def book_prune(ctx: click.Context, before: str, dry_run: bool) -> None:
+    """Take old flights and their movements out of the book."""
+    day = parse_day(before)
+    with opened_book(ctx) as opened:
+        taken = (
+            maintenance.would_prune(opened.connection, day)
+            if dry_run
+            else maintenance.prune(opened.connection, day)
+        )
+    if not taken:
+        click.echo(f"nothing in the book is older than {day.isoformat()}")
+        return
+    for entry in taken:
+        click.echo(entry.describe())
+    click.echo("nothing was taken" if dry_run else "taken out")
 
 
 def run() -> None:
