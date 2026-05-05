@@ -9,7 +9,7 @@ import click
 from holdtrim.cli.common import echo_table, opened_book, parse_day
 from holdtrim.errors import DataError
 from holdtrim.report import audit, capacity, season, stock
-from holdtrim.store import export, flights, importer
+from holdtrim.store import export, flights, importer, settings
 
 
 @click.group("report")
@@ -43,15 +43,28 @@ def stock_report(ctx: click.Context, station: str) -> None:
 @group.command("standing")
 @click.argument("station")
 @click.option("--on", required=True, help="The day to read the stock as at.")
-@click.option("--free-days", type=int, default=5, show_default=True, help="Days before charging.")
-@click.option("--rate", type=int, default=6, show_default=True, help="Charge a day after that.")
+@click.option("--free-days", type=int, default=None, help="Days before charging.")
+@click.option("--rate", type=int, default=None, help="Charge a day after the free days.")
 @click.pass_context
-def standing_report(ctx: click.Context, station: str, on: str, free_days: int, rate: int) -> None:
-    """What has been standing too long, and what it is costing."""
+def standing_report(
+    ctx: click.Context, station: str, on: str, free_days: int | None, rate: int | None
+) -> None:
+    """What has been standing too long, and what it is costing.
+
+    The free days and the rate are policy, so they come off the settings unless
+    the caller asks for something else. A default written into the command is
+    how two reports end up disagreeing about the same station.
+    """
     day = parse_day(on)
     with opened_book(ctx) as book:
-        found = stock.standing(book.connection, station, day, free_days=free_days, daily_rate=rate)
-        owed = stock.owing(book.connection, station, day, free_days=free_days, daily_rate=rate)
+        days = (
+            settings.whole(book.connection, "demurrage.free_days")
+            if free_days is None
+            else free_days
+        )
+        daily = settings.whole(book.connection, "demurrage.daily_rate") if rate is None else rate
+        found = stock.standing(book.connection, station, day, free_days=days, daily_rate=daily)
+        owed = stock.owing(book.connection, station, day, free_days=days, daily_rate=daily)
     echo_table(
         ["uld", "base", "since", "days", "chargeable", "charge"],
         [

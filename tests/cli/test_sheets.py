@@ -79,6 +79,44 @@ def test_a_change_that_is_not_a_pair_is_refused(runner: CliRunner, flight_book: 
     assert result.exception is not None
 
 
+def test_the_lmc_tolerance_comes_off_the_settings(runner: CliRunner, flight_book: Path) -> None:
+    planned(runner, flight_book)
+    run(runner, flight_book, "setting", "set", "lmc.tolerance", "100")
+    result = run(
+        runner,
+        flight_book,
+        "sheet",
+        "print",
+        "QH412",
+        "2025-05-12",
+        "--by",
+        "K Ravn",
+        "--lmc",
+        "11P=-200",
+    )
+    assert "past tolerance by" in result.output
+
+
+def test_a_change_inside_the_set_tolerance_is_not_flagged(
+    runner: CliRunner, flight_book: Path
+) -> None:
+    planned(runner, flight_book)
+    run(runner, flight_book, "setting", "set", "lmc.tolerance", "900")
+    result = run(
+        runner,
+        flight_book,
+        "sheet",
+        "print",
+        "QH412",
+        "2025-05-12",
+        "--by",
+        "K Ravn",
+        "--lmc",
+        "11P=-200",
+    )
+    assert "past tolerance by" not in result.output
+
+
 def test_a_change_with_no_number_is_refused(runner: CliRunner, flight_book: Path) -> None:
     planned(runner, flight_book)
     result = run(

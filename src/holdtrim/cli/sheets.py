@@ -13,7 +13,7 @@ from holdtrim.office import Office
 from holdtrim.plan.lmc import Change, Changes
 from holdtrim.sheet.loadsheet import after_changes
 from holdtrim.sheet.render import render
-from holdtrim.store import flights, sheets
+from holdtrim.store import flights, settings, sheets
 
 
 def _change(text: str) -> Change:
@@ -48,8 +48,11 @@ def print_sheet(
     lmc_changes: tuple[str, ...],
 ) -> None:
     """Print the loadsheet, whether or not it may be issued."""
-    changes = Changes(changes=tuple(_change(entry) for entry in lmc_changes))
     with opened_book(ctx) as book:
+        changes = Changes(
+            changes=tuple(_change(entry) for entry in lmc_changes),
+            tolerance=settings.whole(book.connection, "lmc.tolerance"),
+        )
         file = Office(connection=book.connection).on(designator, parse_day(day))
         sheet = file.loadsheet(prepared_by, edition=edition)
     if not changes.empty:

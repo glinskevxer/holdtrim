@@ -498,13 +498,17 @@ What a period came to, flights and kilograms and limits.
 
 What has been standing too long, and what it is costing.
 
+    The free days and the rate are policy, so they come off the settings unless
+    the caller asks for something else. A default written into the command is
+    how two reports end up disagreeing about the same station.
+
 Arguments: `station`
 
 | option | what it does |
 | --- | --- |
 | `--on` | The day to read the stock as at. |
 | `--free-days` | Days before charging. |
-| `--rate` | Charge a day after that. |
+| `--rate` | Charge a day after the free days. |
 
 ### `holdtrim report stock`
 

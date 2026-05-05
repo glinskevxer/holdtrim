@@ -44,6 +44,31 @@ def test_nothing_standing_says_so(runner: CliRunner, flight_book: Path) -> None:
     assert "nothing has been standing at BLL" in result.output
 
 
+def test_the_free_days_come_off_the_settings(runner: CliRunner, flight_book: Path) -> None:
+    run(runner, flight_book, "uld", "move", "PMC12345QH", "LGG", "--on", "2025-05-01")
+    run(runner, flight_book, "setting", "set", "demurrage.free_days", "0")
+    run(runner, flight_book, "setting", "set", "demurrage.daily_rate", "10")
+    result = run(runner, flight_book, "report", "standing", "LGG", "--on", "2025-05-11")
+    assert "owing 100" in result.output
+
+
+def test_the_command_line_beats_the_settings(runner: CliRunner, flight_book: Path) -> None:
+    run(runner, flight_book, "uld", "move", "PMC12345QH", "LGG", "--on", "2025-05-01")
+    run(runner, flight_book, "setting", "set", "demurrage.free_days", "0")
+    result = run(
+        runner,
+        flight_book,
+        "report",
+        "standing",
+        "LGG",
+        "--on",
+        "2025-05-11",
+        "--free-days",
+        "20",
+    )
+    assert "owing 0" in result.output
+
+
 def test_the_two_records_disagree_when_nothing_is_logged(
     runner: CliRunner, flight_book: Path
 ) -> None:
