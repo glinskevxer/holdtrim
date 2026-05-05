@@ -1,5 +1,5 @@
 -- The shape of the book after every migration.
--- Written by python -m holdtrim.tools.schema_dump at schema 12.
+-- Written by python -m holdtrim.tools.schema_dump at schema 13.
 
 CREATE INDEX consignment_by_route ON consignment (origin, destination, ready_on);
 CREATE INDEX dangerous_goods_by_awb ON dangerous_goods (awb, un_number);
@@ -25,6 +25,7 @@ CREATE TABLE loadsheet ( flight_key TEXT NOT NULL REFERENCES sector (key) ON DEL
 CREATE TABLE plan_assignment ( flight_key TEXT NOT NULL REFERENCES load_plan (flight_key) ON DELETE CASCADE, hold_position TEXT NOT NULL, ordinal INTEGER NOT NULL, weight INTEGER NOT NULL, uld TEXT NOT NULL DEFAULT '', destination TEXT NOT NULL DEFAULT '', PRIMARY KEY (flight_key, hold_position) );
 CREATE TABLE schema_migration ( version INTEGER PRIMARY KEY, name TEXT NOT NULL );
 CREATE TABLE sector ( key TEXT PRIMARY KEY, carrier TEXT NOT NULL, number INTEGER NOT NULL, suffix TEXT NOT NULL DEFAULT '', day TEXT NOT NULL, registration TEXT NOT NULL REFERENCES tail (registration), origin TEXT NOT NULL, destination TEXT NOT NULL, taxi_fuel INTEGER NOT NULL, trip_fuel INTEGER NOT NULL, takeoff_fuel INTEGER NOT NULL, crew INTEGER NOT NULL, freighter INTEGER NOT NULL, status TEXT NOT NULL );
+CREATE TABLE setting ( name TEXT PRIMARY KEY, value TEXT NOT NULL );
 CREATE TABLE station ( code TEXT PRIMARY KEY, name TEXT NOT NULL, elevation_feet INTEGER NOT NULL, handling_agent TEXT NOT NULL DEFAULT '', free_storage_days INTEGER NOT NULL DEFAULT 2 );
 CREATE TABLE tail ( registration TEXT PRIMARY KEY, type_code TEXT NOT NULL REFERENCES aircraft_type (code), dry_operating_weight INTEGER NOT NULL, dry_operating_index TEXT NOT NULL, weighed_on TEXT NOT NULL, serial_number TEXT NOT NULL DEFAULT '', status TEXT NOT NULL, weighing_valid_months INTEGER NOT NULL );
 CREATE TABLE trim_point ( type_code TEXT NOT NULL REFERENCES aircraft_type (code) ON DELETE CASCADE, percent_mac TEXT NOT NULL, setting TEXT NOT NULL, PRIMARY KEY (type_code, percent_mac) );

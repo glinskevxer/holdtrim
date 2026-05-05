@@ -512,6 +512,32 @@ What is standing at a station, by base size.
 
 Arguments: `station`
 
+## `holdtrim setting`
+
+The figures that are policy rather than certificate.
+
+### `holdtrim setting clear`
+
+Put a setting back to its default.
+
+Arguments: `name`
+
+### `holdtrim setting get`
+
+One setting.
+
+Arguments: `name`
+
+### `holdtrim setting list`
+
+Every setting, its value, and where that value came from.
+
+### `holdtrim setting set`
+
+Change one setting.
+
+Arguments: `name`, `value`
+
 ## `holdtrim sheet`
 
 The loadsheet and what goes on it.

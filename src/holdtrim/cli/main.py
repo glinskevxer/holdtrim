@@ -15,6 +15,7 @@ from holdtrim.cli import (
     flights,
     messages,
     planning,
+    policy,
     reports,
     sheets,
     stations,
@@ -113,6 +114,7 @@ cli.add_command(flights.group)
 cli.add_command(messages.group)
 cli.add_command(planning.group)
 cli.add_command(reports.group)
+cli.add_command(policy.group)
 cli.add_command(sheets.group)
 cli.add_command(stations.group)
 cli.add_command(tails.group)

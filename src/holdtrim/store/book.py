@@ -40,6 +40,7 @@ COUNTED_TABLES = (
     "uld_movement",
     "dangerous_goods",
     "loadsheet",
+    "setting",
 )
 
 

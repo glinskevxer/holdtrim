@@ -314,6 +314,18 @@ MIGRATIONS: tuple[Migration, ...] = (
             "CREATE INDEX loadsheet_by_day ON loadsheet (issued_on)",
         ),
     ),
+    Migration(
+        version=13,
+        name="operator settings",
+        statements=(
+            """
+            CREATE TABLE setting (
+                name TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            )
+            """,
+        ),
+    ),
 )
 
 
