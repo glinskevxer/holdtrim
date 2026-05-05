@@ -485,6 +485,15 @@ Read a booking file in, reporting the rows that would not go.
 
 Arguments: `source`
 
+### `holdtrim report period`
+
+What a period came to, flights and kilograms and limits.
+
+| option | what it does |
+| --- | --- |
+| `--from` | The first day of the period. |
+| `--to` | The last day of the period. |
+
 ### `holdtrim report standing`
 
 What has been standing too long, and what it is costing.

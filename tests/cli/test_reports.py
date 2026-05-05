@@ -109,3 +109,19 @@ def test_a_booking_file_with_a_bad_row_is_reported(
 
 def test_the_group_is_registered_under_its_name() -> None:
     assert cli.commands["report"] is reports.group
+
+
+def test_a_period_sums_up_what_flew(runner: CliRunner, flight_book: Path) -> None:
+    planned(runner, flight_book)
+    result = run(
+        runner, flight_book, "report", "period", "--from", "2025-05-01", "--to", "2025-05-31"
+    )
+    assert "flights 1" in result.output
+    assert "carried 2000 kg" in result.output
+
+
+def test_a_period_with_nothing_in_it_sums_to_nothing(runner: CliRunner, flight_book: Path) -> None:
+    result = run(
+        runner, flight_book, "report", "period", "--from", "2024-01-01", "--to", "2024-01-31"
+    )
+    assert "flights 0" in result.output

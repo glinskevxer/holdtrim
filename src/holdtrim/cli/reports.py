@@ -8,7 +8,7 @@ import click
 
 from holdtrim.cli.common import echo_table, opened_book, parse_day
 from holdtrim.errors import DataError
-from holdtrim.report import audit, capacity, stock
+from holdtrim.report import audit, capacity, season, stock
 from holdtrim.store import export, flights, importer
 
 
@@ -127,6 +127,19 @@ def flight_file(ctx: click.Context, designator: str, day: str) -> None:
     with opened_book(ctx) as book:
         trail = audit.gather(book.connection, key)
     click.echo(audit.render(trail), nl=False)
+
+
+@group.command("period")
+@click.option("--from", "start", required=True, help="The first day of the period.")
+@click.option("--to", "end", required=True, help="The last day of the period.")
+@click.pass_context
+def period_report(ctx: click.Context, start: str, end: str) -> None:
+    """What a period came to, flights and kilograms and limits."""
+    covered = season.Period(start=parse_day(start), end=parse_day(end))
+    with opened_book(ctx) as book:
+        summary = season.summarise(book.connection, covered)
+    for line in summary.lines():
+        click.echo(line)
 
 
 @group.command("export")
