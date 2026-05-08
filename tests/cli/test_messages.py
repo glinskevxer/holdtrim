@@ -182,3 +182,37 @@ def test_a_delay_that_is_not_a_pair_is_refused(runner: CliRunner, flight_book: P
         *wire("--off-blocks", "1815", "--airborne", "1830", "--eta", "1930", "--delay", "41"),
     )
     assert result.exception is not None
+
+
+def sent(tmp_path: Path) -> Path:
+    path = tmp_path / "ldm.txt"
+    path.write_text("LDM\nQH412/12.OY-JAF.2/0\n-LGG.0/0/0.T2000.2/2000\n", encoding="utf-8")
+    return path
+
+
+def test_a_received_message_reads_back(
+    runner: CliRunner, flight_book: Path, tmp_path: Path
+) -> None:
+    result = run(runner, flight_book, "message", "read", str(sent(tmp_path)))
+    assert "flight QH412 day 12 aircraft OY-JAF" in result.output
+    assert "total 2000 kg" in result.output
+
+
+def test_a_message_that_agrees_with_the_book_says_so(
+    runner: CliRunner, flight_book: Path, tmp_path: Path
+) -> None:
+    planned(runner, flight_book)
+    result = run(
+        runner, flight_book, "message", "compare", "QH412", "2025-05-12", str(sent(tmp_path))
+    )
+    assert "agree about QH412/12" in result.output
+
+
+def test_a_message_that_disagrees_is_reported(
+    runner: CliRunner, flight_book: Path, tmp_path: Path
+) -> None:
+    result = run(
+        runner, flight_book, "message", "compare", "QH412", "2025-05-12", str(sent(tmp_path))
+    )
+    assert "the message says 2000 kg" in result.output
+    assert result.exit_code == 6

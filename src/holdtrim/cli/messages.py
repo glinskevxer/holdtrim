@@ -8,11 +8,13 @@ right.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import click
 
 from holdtrim.cli.common import opened_book, parse_day
 from holdtrim.errors import DataError
-from holdtrim.message import cpm, ldm, mvt, ucm
+from holdtrim.message import cpm, ldm, mvt, parse, ucm
 from holdtrim.message.mvt import Arrival, Departure, delay
 from holdtrim.message.ucm import DeviceMovement
 from holdtrim.office import Office
@@ -178,6 +180,41 @@ def movement(
         filed=filed,
     )
     click.echo(message.render(), nl=False)
+
+
+@group.command("read")
+@click.argument("source", type=click.Path(dir_okay=False, exists=True, path_type=Path))
+def read_message(source: Path) -> None:
+    """Read a load distribution message and say what it carries."""
+    message = parse.read(source.read_text(encoding="utf-8"))
+    click.echo(f"flight {message.flight} day {message.day:02d} aircraft {message.registration}")
+    click.echo(f"version {message.version} crew {message.crew}")
+    for offload in message.offloads:
+        holds = " ".join(f"{hold}/{weight}" for hold, weight in sorted(offload.holds.items()))
+        click.echo(f"{offload.station} {offload.total} kg {holds}".rstrip())
+    click.echo(f"total {message.total} kg")
+    if message.supplementary:
+        click.echo(f"supplementary {message.supplementary}")
+
+
+@group.command("compare")
+@click.argument("designator")
+@click.argument("day")
+@click.argument("source", type=click.Path(dir_okay=False, exists=True, path_type=Path))
+@click.pass_context
+def compare_message(ctx: click.Context, designator: str, day: str, source: Path) -> None:
+    """Compare a received message against what the book says."""
+    message = parse.read(source.read_text(encoding="utf-8"))
+    with opened_book(ctx) as book:
+        file = Office(connection=book.connection).on(designator, parse_day(day))
+        sheet = file.loadsheet("the office")
+    found = parse.compare(message, sheet)
+    if not found:
+        click.echo(f"the message and the book agree about {file.sector.reference}")
+        return
+    for finding in found:
+        click.echo(f"{finding.severity} {finding.describe()}")
+    raise SystemExit(6)
 
 
 @group.command("plan")

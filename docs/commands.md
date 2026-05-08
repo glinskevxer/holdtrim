@@ -306,6 +306,12 @@ Create the book, or bring an existing one up to date.
 
 The messages that leave when the aeroplane does.
 
+### `holdtrim message compare`
+
+Compare a received message against what the book says.
+
+Arguments: `designator`, `day`, `source`
+
 ### `holdtrim message cpm`
 
 The container and pallet message.
@@ -361,6 +367,12 @@ Arguments: `designator`, `day`
 | `--to` | Teletype address. |
 | `--from` | Our own teletype address. |
 | `--filed` | Filing time as DDHHMM. |
+
+### `holdtrim message read`
+
+Read a load distribution message and say what it carries.
+
+Arguments: `source`
 
 ### `holdtrim message ucm`
 
