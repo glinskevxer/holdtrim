@@ -42,6 +42,7 @@ jobs:
       - run: python -m holdtrim.tools.check_workflow
       - run: python -m holdtrim.tools.check_readme
       - run: python -m holdtrim.tools.check_tools
+      - run: python -m holdtrim.tools.check_design
 
   tests:
     runs-on: ubuntu-latest
