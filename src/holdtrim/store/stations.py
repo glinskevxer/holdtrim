@@ -7,7 +7,8 @@ import sqlite3
 from holdtrim.errors import DuplicateError, NotFoundError
 from holdtrim.ids import parse_station
 from holdtrim.model.station import Station
-from holdtrim.store.sqlite import one, rows, scalar_int, transaction
+from holdtrim.store.records import counted, dropped, held
+from holdtrim.store.sqlite import one, rows, transaction
 
 COLUMNS = "code, name, elevation_feet, handling_agent, free_storage_days"
 
@@ -40,10 +41,14 @@ def add(connection: sqlite3.Connection, station: Station) -> Station:
     return station
 
 
+EXISTS = "SELECT count(*) FROM station WHERE code = ?"
+DELETE = "DELETE FROM station WHERE code = ?"
+COUNT = "SELECT count(*) FROM station"
+
+
 def exists(connection: sqlite3.Connection, code: str) -> bool:
     """Whether a code is in the register, without raising if it is not."""
-    wanted = parse_station(code)
-    return scalar_int(connection, "SELECT count(*) FROM station WHERE code = ?", (wanted,)) > 0
+    return held(connection, EXISTS, parse_station(code))
 
 
 def get(connection: sqlite3.Connection, code: str) -> Station:
@@ -84,12 +89,15 @@ def save(connection: sqlite3.Connection, station: Station) -> Station:
 def remove(connection: sqlite3.Connection, code: str) -> None:
     """Take a station out of the register."""
     wanted = parse_station(code)
-    if not exists(connection, wanted):
-        raise NotFoundError(f"no station {wanted} in the register")
-    with transaction(connection):
-        connection.execute("DELETE FROM station WHERE code = ?", (wanted,))
+    dropped(
+        connection,
+        exists_statement=EXISTS,
+        delete_statement=DELETE,
+        key=wanted,
+        missing=f"no station {wanted} in the register",
+    )
 
 
 def count(connection: sqlite3.Connection) -> int:
     """How many stations the register holds."""
-    return scalar_int(connection, "SELECT count(*) FROM station")
+    return counted(connection, COUNT)

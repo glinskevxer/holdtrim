@@ -9,7 +9,8 @@ from holdtrim.errors import DuplicateError, NotFoundError, StateError
 from holdtrim.ids import Flight, parse_flight, parse_registration, parse_station
 from holdtrim.model.flight import PLANNED, Sector
 from holdtrim.store.fleet import tail_exists
-from holdtrim.store.sqlite import one, rows, scalar_int, transaction
+from holdtrim.store.records import counted, dropped, held
+from holdtrim.store.sqlite import one, rows, transaction
 
 COLUMNS = (
     "key, carrier, number, suffix, day, registration, origin, destination, "
@@ -42,9 +43,14 @@ def key_for(designator: str, day: date) -> str:
     return f"{parse_flight(designator)}/{day.isoformat()}"
 
 
+EXISTS = "SELECT count(*) FROM sector WHERE key = ?"
+DELETE = "DELETE FROM sector WHERE key = ?"
+COUNT = "SELECT count(*) FROM sector"
+
+
 def exists(connection: sqlite3.Connection, key: str) -> bool:
     """Whether a flight is on file."""
-    return scalar_int(connection, "SELECT count(*) FROM sector WHERE key = ?", (key,)) > 0
+    return held(connection, EXISTS, key)
 
 
 def add(connection: sqlite3.Connection, sector: Sector) -> Sector:
@@ -163,12 +169,15 @@ def save(connection: sqlite3.Connection, sector: Sector) -> Sector:
 
 def remove(connection: sqlite3.Connection, key: str) -> None:
     """Take a flight off file."""
-    if not exists(connection, key):
-        raise NotFoundError(f"no flight {key} on file")
-    with transaction(connection):
-        connection.execute("DELETE FROM sector WHERE key = ?", (key,))
+    dropped(
+        connection,
+        exists_statement=EXISTS,
+        delete_statement=DELETE,
+        key=key,
+        missing=f"no flight {key} on file",
+    )
 
 
 def count(connection: sqlite3.Connection) -> int:
     """How many flights are on file."""
-    return scalar_int(connection, "SELECT count(*) FROM sector")
+    return counted(connection, COUNT)

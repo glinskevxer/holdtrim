@@ -15,7 +15,8 @@ import sqlite3
 from holdtrim.errors import NotFoundError, StateError
 from holdtrim.plan.loadplan import Assignment, LoadPlan
 from holdtrim.store.flights import exists as flight_exists
-from holdtrim.store.sqlite import one, rows, scalar_int, transaction
+from holdtrim.store.records import counted, dropped, held
+from holdtrim.store.sqlite import one, rows, transaction
 
 COLUMNS = "flight_key, hold_position, ordinal, weight, uld, destination"
 
@@ -29,10 +30,14 @@ def _assignment(row: sqlite3.Row) -> Assignment:
     )
 
 
+EXISTS = "SELECT count(*) FROM load_plan WHERE flight_key = ?"
+DELETE = "DELETE FROM load_plan WHERE flight_key = ?"
+COUNT = "SELECT count(*) FROM load_plan"
+
+
 def exists(connection: sqlite3.Connection, flight_key: str) -> bool:
     """Whether a flight has a plan."""
-    sql = "SELECT count(*) FROM load_plan WHERE flight_key = ?"
-    return scalar_int(connection, sql, (flight_key,)) > 0
+    return held(connection, EXISTS, flight_key)
 
 
 def save(connection: sqlite3.Connection, plan: LoadPlan) -> LoadPlan:
@@ -89,10 +94,13 @@ def get_or_start(connection: sqlite3.Connection, flight_key: str) -> LoadPlan:
 
 def remove(connection: sqlite3.Connection, flight_key: str) -> None:
     """Throw a plan away."""
-    if not exists(connection, flight_key):
-        raise NotFoundError(f"no load plan for flight {flight_key}")
-    with transaction(connection):
-        connection.execute("DELETE FROM load_plan WHERE flight_key = ?", (flight_key,))
+    dropped(
+        connection,
+        exists_statement=EXISTS,
+        delete_statement=DELETE,
+        key=flight_key,
+        missing=f"no load plan for flight {flight_key}",
+    )
 
 
 def flights_carrying(connection: sqlite3.Connection, uld: str) -> list[str]:
@@ -107,4 +115,4 @@ def flights_carrying(connection: sqlite3.Connection, uld: str) -> list[str]:
 
 def count(connection: sqlite3.Connection) -> int:
     """How many plans are stored."""
-    return scalar_int(connection, "SELECT count(*) FROM load_plan")
+    return counted(connection, COUNT)

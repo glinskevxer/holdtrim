@@ -7,7 +7,8 @@ import sqlite3
 from holdtrim.errors import DuplicateError, NotFoundError
 from holdtrim.ids import UldCode, parse_station, parse_uld
 from holdtrim.model.uld import SERVICEABLE, Uld
-from holdtrim.store.sqlite import one, rows, scalar_int, transaction
+from holdtrim.store.records import counted, dropped, held
+from holdtrim.store.sqlite import one, rows, transaction
 
 COLUMNS = "code, type_code, serial, owner, tare, max_gross, at_station, condition, contour"
 
@@ -33,9 +34,14 @@ def _key(code: str | UldCode) -> str:
     return parse_uld(code).formatted()
 
 
+EXISTS = "SELECT count(*) FROM uld WHERE code = ?"
+DELETE = "DELETE FROM uld WHERE code = ?"
+COUNT = "SELECT count(*) FROM uld"
+
+
 def exists(connection: sqlite3.Connection, code: str | UldCode) -> bool:
     """Whether a device is on the register."""
-    return scalar_int(connection, "SELECT count(*) FROM uld WHERE code = ?", (_key(code),)) > 0
+    return held(connection, EXISTS, _key(code))
 
 
 def add(connection: sqlite3.Connection, device: Uld) -> Uld:
@@ -140,12 +146,15 @@ def move(connection: sqlite3.Connection, code: str | UldCode, station: str) -> U
 def remove(connection: sqlite3.Connection, code: str | UldCode) -> None:
     """Take a device off the register."""
     key = _key(code)
-    if not exists(connection, key):
-        raise NotFoundError(f"no ULD {key} on the register")
-    with transaction(connection):
-        connection.execute("DELETE FROM uld WHERE code = ?", (key,))
+    dropped(
+        connection,
+        exists_statement=EXISTS,
+        delete_statement=DELETE,
+        key=key,
+        missing=f"no ULD {key} on the register",
+    )
 
 
 def count(connection: sqlite3.Connection) -> int:
     """How many devices are on the register."""
-    return scalar_int(connection, "SELECT count(*) FROM uld")
+    return counted(connection, COUNT)

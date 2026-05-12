@@ -9,6 +9,7 @@ from decimal import Decimal
 from holdtrim.errors import DuplicateError, NotFoundError
 from holdtrim.ids import AirWaybill, parse_awb, parse_station
 from holdtrim.model.consignment import Consignment
+from holdtrim.store.records import counted, dropped, held
 from holdtrim.store.sqlite import one, rows, scalar_int, transaction
 
 HANDLING_SEPARATOR = " "
@@ -41,10 +42,14 @@ def _key(awb: str | AirWaybill) -> str:
     return parse_awb(awb).plain()
 
 
+EXISTS = "SELECT count(*) FROM consignment WHERE awb = ?"
+DELETE = "DELETE FROM consignment WHERE awb = ?"
+COUNT = "SELECT count(*) FROM consignment"
+
+
 def exists(connection: sqlite3.Connection, awb: str | AirWaybill) -> bool:
     """Whether a waybill is on file."""
-    sql = "SELECT count(*) FROM consignment WHERE awb = ?"
-    return scalar_int(connection, sql, (_key(awb),)) > 0
+    return held(connection, EXISTS, _key(awb))
 
 
 def add(connection: sqlite3.Connection, consignment: Consignment) -> Consignment:
@@ -141,15 +146,18 @@ def save(connection: sqlite3.Connection, consignment: Consignment) -> Consignmen
 def remove(connection: sqlite3.Connection, awb: str | AirWaybill) -> None:
     """Take a waybill off file."""
     key = _key(awb)
-    if not exists(connection, key):
-        raise NotFoundError(f"no waybill {key} on file")
-    with transaction(connection):
-        connection.execute("DELETE FROM consignment WHERE awb = ?", (key,))
+    dropped(
+        connection,
+        exists_statement=EXISTS,
+        delete_statement=DELETE,
+        key=key,
+        missing=f"no waybill {key} on file",
+    )
 
 
 def count(connection: sqlite3.Connection) -> int:
     """How many waybills are on file."""
-    return scalar_int(connection, "SELECT count(*) FROM consignment")
+    return counted(connection, COUNT)
 
 
 def tonnage(connection: sqlite3.Connection, origin: str, destination: str) -> int:
