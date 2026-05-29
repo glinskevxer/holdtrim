@@ -1,0 +1,16 @@
+# What each migration was when it was accepted.
+# Written by python -m holdtrim.tools.check_migrations --write.
+# A changed line here means a migration was edited, which is never right.
+1 1524a63420588be7
+2 c93d3291150657c7
+3 d8deaf782105df7c
+4 65da2693ea488a4c
+5 37e0a75fdc3bc41d
+6 5cd5fa621a8f5b8b
+7 43879d0ed416b542
+8 8cd2bbca0bc97817
+9 571987c4324dcf0d
+10 0a888836f96522d5
+11 4ead731f234f21af
+12 99bdf3e93dd7d638
+13 efed8a1c450dc1d8
