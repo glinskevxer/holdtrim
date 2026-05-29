@@ -150,3 +150,14 @@ def test_a_period_with_nothing_in_it_sums_to_nothing(runner: CliRunner, flight_b
         runner, flight_book, "report", "period", "--from", "2024-01-01", "--to", "2024-01-31"
     )
     assert "flights 0" in result.output
+
+
+def test_the_handover_prints_for_a_station(runner: CliRunner, flight_book: Path) -> None:
+    result = run(runner, flight_book, "report", "handover", "BLL", "--on", "2025-05-12")
+    assert "HANDOVER BLL 2025-05-12" in result.output
+    assert "flights still open" in result.output
+
+
+def test_a_station_with_nothing_on_says_so(runner: CliRunner, flight_book: Path) -> None:
+    result = run(runner, flight_book, "report", "handover", "CDG", "--on", "2025-05-12")
+    assert "nothing to hand over" in result.output

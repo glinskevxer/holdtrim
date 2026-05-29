@@ -8,7 +8,7 @@ import click
 
 from holdtrim.cli.common import echo_table, opened_book, parse_day
 from holdtrim.errors import DataError
-from holdtrim.report import audit, capacity, season, stock
+from holdtrim.report import audit, capacity, handover, season, stock
 from holdtrim.store import export, flights, importer, settings
 
 
@@ -153,6 +153,18 @@ def period_report(ctx: click.Context, start: str, end: str) -> None:
         summary = season.summarise(book.connection, covered)
     for line in summary.lines():
         click.echo(line)
+
+
+@group.command("handover")
+@click.argument("station")
+@click.option("--on", required=True, help="The day the shift ends.")
+@click.pass_context
+def handover_report(ctx: click.Context, station: str, on: str) -> None:
+    """What the next shift is walking into."""
+    day = parse_day(on)
+    with opened_book(ctx) as book:
+        sheet = handover.gather(book.connection, station, day)
+    click.echo(handover.render(sheet), nl=False)
 
 
 @group.command("export")

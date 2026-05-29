@@ -491,6 +491,16 @@ Everything the book holds about one flight.
 
 Arguments: `designator`, `day`
 
+### `holdtrim report handover`
+
+What the next shift is walking into.
+
+Arguments: `station`
+
+| option | what it does |
+| --- | --- |
+| `--on` | The day the shift ends. |
+
 ### `holdtrim report import`
 
 Read a booking file in, reporting the rows that would not go.
