@@ -6,6 +6,7 @@ import pytest
 from holdtrim.errors import BookError
 from holdtrim.store.sqlite import (
     broken_references,
+    busy_timeout,
     connect,
     integrity,
     one,
@@ -125,6 +126,40 @@ def test_a_count_reads_back_as_a_whole_number(book: Path) -> None:
 def test_a_count_that_is_not_a_number_is_a_book_error(book: Path) -> None:
     with opened(book) as conn, pytest.raises(BookError, match="expected a whole number"):
         scalar_int(conn, "SELECT 'plenty'")
+
+
+def test_the_busy_timeout_is_set_on_a_new_connection(book: Path) -> None:
+    with opened(book) as conn:
+        assert busy_timeout(conn) == 5000
+
+
+def test_the_busy_timeout_can_be_asked_for(book: Path) -> None:
+    conn = connect(book, busy_timeout=250)
+    try:
+        assert busy_timeout(conn) == 250
+    finally:
+        conn.close()
+
+
+def test_a_book_held_by_another_writer_says_so(book: Path) -> None:
+    with opened(book) as first:
+        first.execute("CREATE TABLE t (a INTEGER)")
+        second = connect(book, busy_timeout=1)
+        try:
+            with transaction(first):
+                first.execute("INSERT INTO t VALUES (1)")
+                with pytest.raises(BookError, match="open somewhere else"), transaction(second):
+                    second.execute("INSERT INTO t VALUES (2)")
+        finally:
+            second.close()
+        assert scalar_int(first, "SELECT count(*) FROM t") == 1
+
+
+def test_an_error_that_is_not_a_lock_is_left_alone(book: Path) -> None:
+    with opened(book) as conn:
+        conn.execute("CREATE TABLE t (a INTEGER)")
+        with pytest.raises(sqlite3.OperationalError), transaction(conn):
+            conn.execute("SELECT * FROM nowhere")
 
 
 def test_connect_is_available_for_callers_that_close_themselves(book: Path) -> None:

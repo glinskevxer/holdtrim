@@ -10,6 +10,11 @@ Statements are allowed to be built from fixed fragments, because the column
 lists are long and repeating them is worse. A fragment has to be a constant
 that is named in capitals, or a join of one, so that whatever ends up in the
 statement was written in this repository rather than passed in at runtime.
+
+There is one more thing allowed and it exists for exactly one reason. A PRAGMA
+cannot take a bound parameter, so setting the busy timeout means putting a
+number in the text. An interpolation wrapped in ``int()`` is accepted, because
+whatever went in, what comes out is a number.
 """
 
 from __future__ import annotations
@@ -30,6 +35,8 @@ def _is_fragment(node: ast.expr) -> bool:
         return node.attr.isupper()
     if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
         return node.func.attr == "join"
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+        return node.func.id == "int"
     return False
 
 

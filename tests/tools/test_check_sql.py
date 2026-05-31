@@ -30,6 +30,10 @@ def test_a_join_is_a_fragment() -> None:
     assert _is_fragment(expression("' AND '.join(where)"))
 
 
+def test_a_number_forced_with_int_is_a_fragment() -> None:
+    assert _is_fragment(expression("int(milliseconds)"))
+
+
 def test_an_ordinary_variable_is_not_a_fragment() -> None:
     assert not _is_fragment(expression("code"))
     assert not _is_fragment(expression("station.code"))
