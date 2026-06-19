@@ -258,6 +258,12 @@ Arguments: `designator`, `day`, `registration`, `origin`, `destination`
 | `--crew` | Crew on board. |
 | `--passenger` | A passenger flight, which refuses cargo only shipments. |
 
+### `holdtrim flight depart`
+
+Record a flight as gone, once nothing is standing in the way.
+
+Arguments: `designator`, `day`
+
 ### `holdtrim flight fuel`
 
 Record the fuel figures the flight plan came back with.

@@ -110,6 +110,13 @@ def test_the_fuel_figures_can_be_changed(runner: CliRunner, fleet_book: Path) ->
     assert "landing with 1000 kg" in result.output
 
 
+def test_a_flight_with_no_loadsheet_may_not_depart(runner: CliRunner, fleet_book: Path) -> None:
+    filed(runner, fleet_book)
+    result = run(runner, fleet_book, "flight", "depart", "QH412", "2025-05-12")
+    assert "no loadsheet issued" in result.output
+    assert result.exit_code == 6
+
+
 def test_a_flight_can_come_off_file(runner: CliRunner, fleet_book: Path) -> None:
     filed(runner, fleet_book)
     run(runner, fleet_book, "flight", "remove", "QH412", "2025-05-12")

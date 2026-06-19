@@ -1,5 +1,6 @@
 import sqlite3
 from collections.abc import Iterator
+from dataclasses import replace
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -10,10 +11,10 @@ from holdtrim.errors import NotFoundError, StateError
 from holdtrim.ids import Flight
 from holdtrim.model.flight import Sector
 from holdtrim.model.tail import Tail
-from holdtrim.office import Office, read
+from holdtrim.office import Office, departure_checks, may_depart, read
 from holdtrim.plan.lmc import Change, Changes
 from holdtrim.plan.loadplan import Assignment, LoadPlan
-from holdtrim.store import fleet, flights, plans
+from holdtrim.store import fleet, flights, plans, sheets
 from holdtrim.store.migrations import apply
 from holdtrim.store.sqlite import opened
 from tests.fleet.test_type_store import a_type
@@ -146,3 +147,61 @@ def test_forgetting_a_flight_reads_it_again(conn: sqlite3.Connection) -> None:
     first = office.flight(KEY)
     office.forget(KEY)
     assert office.flight(KEY) is not first
+
+
+def issue(conn: sqlite3.Connection) -> None:
+    sheets.record(conn, sheets.from_sheet(read(conn, KEY).loadsheet("K Ravn"), date(2025, 5, 12)))
+
+
+def test_a_flight_with_no_loadsheet_may_not_depart(conn: sqlite3.Connection) -> None:
+    planned(conn)
+    found = departure_checks(conn, read(conn, KEY))
+    assert any("no loadsheet issued" in finding.detail for finding in found)
+    assert not may_depart(found)
+
+
+def test_a_flight_with_a_matching_loadsheet_may_depart(conn: sqlite3.Connection) -> None:
+    planned(conn)
+    issue(conn)
+    flights.save(conn, replace(flights.get(conn, KEY), status="closed"))
+    found = departure_checks(conn, read(conn, KEY))
+    assert may_depart(found)
+
+
+def test_a_plan_changed_after_issue_stops_the_flight(conn: sqlite3.Connection) -> None:
+    planned(conn)
+    issue(conn)
+    plans.save(
+        conn,
+        LoadPlan(
+            flight_key=KEY,
+            assignments=(Assignment(position="11P", weight=2400, destination="LGG"),),
+        ),
+    )
+    found = departure_checks(conn, read(conn, KEY))
+    assert any("was signed for 2000 kg" in finding.detail for finding in found)
+    assert not may_depart(found)
+
+
+def test_a_flight_still_open_is_only_a_note(conn: sqlite3.Connection) -> None:
+    planned(conn)
+    issue(conn)
+    found = departure_checks(conn, read(conn, KEY))
+    assert any(finding.detail == "is still open" for finding in found)
+    assert may_depart(found)
+
+
+def test_a_flight_that_has_gone_may_not_go_again(conn: sqlite3.Connection) -> None:
+    planned(conn)
+    issue(conn)
+    flights.save(conn, replace(flights.get(conn, KEY), status="departed"))
+    found = departure_checks(conn, read(conn, KEY))
+    assert any("has already gone" in finding.detail for finding in found)
+
+
+def test_an_expired_weighing_stops_the_departure(conn: sqlite3.Connection) -> None:
+    planned(conn)
+    issue(conn)
+    fleet.save_tail(conn, tail(weighed_on=date(2018, 1, 2)))
+    found = departure_checks(conn, read(conn, KEY))
+    assert any("that has expired" in finding.detail for finding in found)

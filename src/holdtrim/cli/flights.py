@@ -8,7 +8,8 @@ import click
 
 from holdtrim.cli.common import echo_table, opened_book, parse_day
 from holdtrim.ids import parse_flight
-from holdtrim.model.flight import STATUSES, Sector
+from holdtrim.model.flight import DEPARTED, STATUSES, Sector
+from holdtrim.office import Office, departure_checks, may_depart
 from holdtrim.store import fleet, flights
 
 
@@ -164,6 +165,25 @@ def refuel(
         f"{changed.reference} fuel {changed.takeoff_fuel}/{changed.trip_fuel}, "
         f"landing with {changed.landing_fuel} kg"
     )
+
+
+@group.command("depart")
+@click.argument("designator")
+@click.argument("day")
+@click.pass_context
+def depart(ctx: click.Context, designator: str, day: str) -> None:
+    """Record a flight as gone, once nothing is standing in the way."""
+    with opened_book(ctx) as book:
+        file = Office(connection=book.connection).on(designator, parse_day(day))
+        found = departure_checks(book.connection, file)
+        if not may_depart(found):
+            for finding in found:
+                click.echo(f"{finding.severity} {finding.describe()}")
+            raise SystemExit(6)
+        flights.save(book.connection, replace(file.sector, status=DEPARTED))
+    for finding in found:
+        click.echo(f"{finding.severity} {finding.describe()}")
+    click.echo(f"{file.sector.reference} has gone")
 
 
 @group.command("remove")

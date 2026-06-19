@@ -13,15 +13,17 @@ import sqlite3
 from dataclasses import dataclass, field
 from datetime import date
 
+from holdtrim.balance.limits import check
 from holdtrim.balance.loading import Balance, LoadedPosition
 from holdtrim.errors import StateError
+from holdtrim.findings import STOP, WATCH, Finding
 from holdtrim.model.aircraft import AircraftType
-from holdtrim.model.flight import Sector
+from holdtrim.model.flight import DEPARTED, PLANNED, Sector
 from holdtrim.model.tail import Tail
 from holdtrim.plan.lmc import Changes
 from holdtrim.plan.loadplan import LoadPlan
 from holdtrim.sheet.loadsheet import Loadsheet
-from holdtrim.store import fleet, flights, plans
+from holdtrim.store import fleet, flights, plans, sheets
 
 
 @dataclass(frozen=True)
@@ -86,6 +88,72 @@ class FlightFile:
                 f"{self.tail.weighed_on.isoformat()} and that expired on "
                 f"{self.tail.weighing_expires.isoformat()}"
             )
+
+
+DEPARTURE = "departure"
+
+
+def departure_checks(connection: sqlite3.Connection, file: FlightFile) -> tuple[Finding, ...]:
+    """Everything between a flight and being allowed to go.
+
+    The load checks are run again here rather than trusted from when the sheet
+    was issued, because a plan can be changed after issue and nothing stops
+    somebody doing it. A sheet that no longer describes the aeroplane is the
+    one thing on this list that has actually happened.
+    """
+    found = []
+    if file.sector.status == DEPARTED:
+        found.append(
+            Finding(
+                check=DEPARTURE,
+                where=file.sector.reference,
+                detail="has already gone",
+            )
+        )
+    issued = sheets.editions(connection, file.key)
+    if not issued:
+        found.append(
+            Finding(
+                check=DEPARTURE,
+                where=file.sector.reference,
+                detail="has no loadsheet issued against it",
+            )
+        )
+    elif issued[-1].payload != file.plan.payload:
+        found.append(
+            Finding(
+                check=DEPARTURE,
+                where=file.sector.reference,
+                detail=(
+                    f"was signed for {issued[-1].payload} kg and the plan now carries "
+                    f"{file.plan.payload} kg"
+                ),
+            )
+        )
+    if file.sector.status == PLANNED:
+        found.append(
+            Finding(
+                check=DEPARTURE,
+                where=file.sector.reference,
+                detail="is still open",
+                severity=WATCH,
+            )
+        )
+    if not file.tail.weighing_current(file.sector.day):
+        found.append(
+            Finding(
+                check=DEPARTURE,
+                where=file.tail.registration,
+                detail=f"was weighed on {file.tail.weighed_on.isoformat()} and that has expired",
+            )
+        )
+    found.extend(check(file.balance()))
+    return tuple(found)
+
+
+def may_depart(findings: tuple[Finding, ...]) -> bool:
+    """Whether nothing found stops the aeroplane going."""
+    return all(finding.severity != STOP for finding in findings)
 
 
 @dataclass
