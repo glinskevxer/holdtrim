@@ -161,3 +161,31 @@ def test_the_handover_prints_for_a_station(runner: CliRunner, flight_book: Path)
 def test_a_station_with_nothing_on_says_so(runner: CliRunner, flight_book: Path) -> None:
     result = run(runner, flight_book, "report", "handover", "CDG", "--on", "2025-05-12")
     assert "nothing to hand over" in result.output
+
+
+def test_the_flow_report_counts_both_directions(runner: CliRunner, flight_book: Path) -> None:
+    run(runner, flight_book, "uld", "move", "PMC12345QH", "LGG", "--on", "2025-05-12")
+    result = run(
+        runner, flight_book, "report", "flow", "--from", "2025-05-01", "--to", "2025-05-31"
+    )
+    assert "BLL" in result.output
+    assert "LGG" in result.output
+    assert "busiest" in result.output
+
+
+def test_a_period_with_no_movements_says_so(runner: CliRunner, flight_book: Path) -> None:
+    result = run(
+        runner, flight_book, "report", "flow", "--from", "2024-01-01", "--to", "2024-01-31"
+    )
+    assert "nothing moved between" in result.output
+
+
+def test_the_idle_report_lists_what_has_not_moved(runner: CliRunner, flight_book: Path) -> None:
+    run(runner, flight_book, "uld", "move", "PMC12345QH", "LGG", "--on", "2025-05-01")
+    result = run(runner, flight_book, "report", "idle", "--on", "2025-05-20")
+    assert "PMC12345QH" in result.output
+
+
+def test_nothing_idle_says_so(runner: CliRunner, flight_book: Path) -> None:
+    result = run(runner, flight_book, "report", "idle", "--on", "2025-05-20")
+    assert "nothing has been standing more than 14 days" in result.output

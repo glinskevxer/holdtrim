@@ -497,6 +497,15 @@ Everything the book holds about one flight.
 
 Arguments: `designator`, `day`
 
+### `holdtrim report flow`
+
+What every station gained and lost over a period.
+
+| option | what it does |
+| --- | --- |
+| `--from` | The first day of the period. |
+| `--to` | The last day of the period. |
+
 ### `holdtrim report handover`
 
 What the next shift is walking into.
@@ -506,6 +515,15 @@ Arguments: `station`
 | option | what it does |
 | --- | --- |
 | `--on` | The day the shift ends. |
+
+### `holdtrim report idle`
+
+Devices that have been standing somewhere too long.
+
+| option | what it does |
+| --- | --- |
+| `--on` | The day to read the fleet as at. |
+| `--days` | How long counts as idle. |
 
 ### `holdtrim report import`
 

@@ -8,7 +8,7 @@ import click
 
 from holdtrim.cli.common import echo_table, opened_book, parse_day
 from holdtrim.errors import DataError
-from holdtrim.report import audit, capacity, handover, season, stock
+from holdtrim.report import audit, capacity, handover, season, stock, uldflow
 from holdtrim.store import export, flights, importer, settings
 
 
@@ -165,6 +165,43 @@ def handover_report(ctx: click.Context, station: str, on: str) -> None:
     with opened_book(ctx) as book:
         sheet = handover.gather(book.connection, station, day)
     click.echo(handover.render(sheet), nl=False)
+
+
+@group.command("flow")
+@click.option("--from", "start", required=True, help="The first day of the period.")
+@click.option("--to", "end", required=True, help="The last day of the period.")
+@click.pass_context
+def flow_report(ctx: click.Context, start: str, end: str) -> None:
+    """What every station gained and lost over a period."""
+    first = parse_day(start)
+    last = parse_day(end)
+    with opened_book(ctx) as book:
+        report = uldflow.flows(book.connection, first, last)
+    echo_table(
+        ["station", "in", "out", "net"],
+        [[flow.station, str(flow.arrived), str(flow.left), f"{flow.net:+d}"] for flow in report],
+        empty=f"nothing moved between {first.isoformat()} and {last.isoformat()}",
+    )
+    if report:
+        click.echo(f"busiest {uldflow.busiest(report)}")
+        for flow in uldflow.piling_up(report):
+            click.echo(f"piling up at {flow.station}, {flow.net} more than went out")
+
+
+@group.command("idle")
+@click.option("--on", required=True, help="The day to read the fleet as at.")
+@click.option("--days", type=int, default=14, show_default=True, help="How long counts as idle.")
+@click.pass_context
+def idle_report(ctx: click.Context, on: str, days: int) -> None:
+    """Devices that have been standing somewhere too long."""
+    day = parse_day(on)
+    with opened_book(ctx) as book:
+        found = uldflow.idle(book.connection, day, days=days)
+    echo_table(
+        ["uld", "station", "since", "days"],
+        [[entry.uld, entry.station, entry.since.isoformat(), str(entry.days)] for entry in found],
+        empty=f"nothing has been standing more than {days} days on {day.isoformat()}",
+    )
 
 
 @group.command("export")
