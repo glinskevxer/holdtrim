@@ -163,3 +163,27 @@ def test_a_book_with_nothing_old_prunes_nothing(runner: CliRunner, book: Path) -
     run(runner, book, "init")
     result = run(runner, book, "book", "prune", "--before", "2020-01-01")
     assert "nothing in the book is older" in result.output
+
+
+def test_the_doctor_says_a_fresh_book_is_sound(runner: CliRunner, book: Path) -> None:
+    run(runner, book, "init")
+    result = run(runner, book, "book", "doctor")
+    assert "nothing wrong with the book" in result.output
+
+
+def test_the_doctor_reports_an_orphan_movement(runner: CliRunner, book: Path) -> None:
+    run(runner, book, "init")
+    run(
+        runner,
+        book,
+        "uld",
+        "record",
+        "PMC12345QH",
+        "BLL",
+        "in",
+        "--on",
+        "2025-05-12",
+    )
+    result = run(runner, book, "book", "doctor")
+    assert "not on the ULD register" in result.output
+    assert result.exit_code == 7

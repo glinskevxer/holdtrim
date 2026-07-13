@@ -31,7 +31,7 @@ from holdtrim.cli.common import (
     settings,
 )
 from holdtrim.errors import HoldtrimError
-from holdtrim.store import maintenance
+from holdtrim.store import doctor, maintenance
 from holdtrim.store.book import initialise
 
 
@@ -119,6 +119,20 @@ cli.add_command(sheets.group)
 cli.add_command(stations.group)
 cli.add_command(tails.group)
 cli.add_command(ulds.group)
+
+
+@book.command("doctor")
+@click.pass_context
+def book_doctor(ctx: click.Context) -> None:
+    """Read the book over for what the foreign keys cannot catch."""
+    with opened_book(ctx) as opened:
+        complaints = doctor.examine(opened.connection)
+    if doctor.sound(complaints):
+        click.echo("nothing wrong with the book")
+        return
+    for complaint in complaints:
+        click.echo(complaint.describe())
+    raise SystemExit(7)
 
 
 @book.command("sizes")

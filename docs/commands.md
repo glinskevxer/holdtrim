@@ -29,6 +29,10 @@ Arguments: `destination`
 
 How many rows are in each table worth counting.
 
+### `holdtrim book doctor`
+
+Read the book over for what the foreign keys cannot catch.
+
 ### `holdtrim book indexes`
 
 Every index the book carries.
