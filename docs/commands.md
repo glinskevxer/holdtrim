@@ -430,6 +430,12 @@ Throw the plan away and start again.
 
 Arguments: `designator`, `day`
 
+### `holdtrim plan contour`
+
+Whether every device planned is the right shape for its position.
+
+Arguments: `designator`, `day`
+
 ### `holdtrim plan offload`
 
 Say what has to come off, and what it should be.

@@ -9,6 +9,8 @@ from holdtrim.cli.common import echo_table, opened_book, parse_day
 from holdtrim.errors import DataError
 from holdtrim.office import Office
 from holdtrim.plan.allocate import Item, for_flight
+from holdtrim.plan.contour import check as contour_check
+from holdtrim.plan.contour import tapered
 from holdtrim.plan.loadplan import Assignment
 from holdtrim.plan.offload import GENERAL, LEVELS, Candidate, for_balance
 from holdtrim.plan.sequence import as_planned, instruction, outside, suggested, unloading, walk
@@ -195,6 +197,29 @@ def sequence(ctx: click.Context, designator: str, day: str, keep_order: bool, un
     if bad:
         click.echo(f"{len(bad)} step(s) leave the envelope")
         raise SystemExit(6)
+
+
+@group.command("contour")
+@click.argument("designator")
+@click.argument("day")
+@click.pass_context
+def contour(ctx: click.Context, designator: str, day: str) -> None:
+    """Whether every device planned is the right shape for its position."""
+    with opened_book(ctx) as book:
+        file = Office(connection=book.connection).on(designator, parse_day(day))
+        loaded = {
+            assignment.position: ulds.get(book.connection, assignment.uld).contour
+            for assignment in file.plan.assignments
+            if assignment.uld
+        }
+        found = contour_check(file.kind.layout, loaded)
+        narrow = tapered(file.kind.layout)
+    click.echo(f"tapered positions {' '.join(sorted(narrow)) or 'none'}")
+    if not found:
+        click.echo(f"every device on {file.sector.reference} is the right shape for its position")
+        return
+    for finding in found:
+        click.echo(f"{finding.severity} {finding.describe()}")
 
 
 @group.command("check")

@@ -197,3 +197,19 @@ def test_a_plan_can_be_thrown_away(runner: CliRunner, flight_book: Path) -> None
 
 def test_the_group_is_registered_under_its_name() -> None:
     assert cli.commands["plan"] is planning.group
+
+
+def test_the_contour_check_names_the_tapered_positions(
+    runner: CliRunner, flight_book: Path
+) -> None:
+    planned(runner, flight_book)
+    result = run(runner, flight_book, "plan", "contour", "QH412", "2025-05-12")
+    assert "tapered positions" in result.output
+    assert "right shape for its position" in result.output
+
+
+def test_a_flight_with_no_devices_has_nothing_to_check(
+    runner: CliRunner, flight_book: Path
+) -> None:
+    result = run(runner, flight_book, "plan", "contour", "QH412", "2025-05-12")
+    assert "right shape for its position" in result.output
