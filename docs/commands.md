@@ -204,6 +204,12 @@ Arguments: `designator`, `day`
 
 The types this operation flies.
 
+### `holdtrim fleet compare`
+
+Say what a new schedule document changes about a registered type.
+
+Arguments: `code`, `schedule`
+
 ### `holdtrim fleet dump`
 
 Write a registered type back out as a schedule document.

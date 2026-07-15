@@ -7,6 +7,7 @@ from pathlib import Path
 import click
 
 from holdtrim.cli.common import echo_table, opened_book
+from holdtrim.schedule.compare import differences
 from holdtrim.schedule.document import load_schedule, save_schedule
 from holdtrim.store import fleet
 
@@ -129,6 +130,24 @@ def dump(ctx: click.Context, code: str, destination: Path) -> None:
         kind = fleet.get_type(book.connection, code)
     save_schedule(kind, destination)
     click.echo(f"wrote {kind.code} to {destination}")
+
+
+@group.command("compare")
+@click.argument("code")
+@click.argument("schedule", type=click.Path(dir_okay=False, path_type=Path))
+@click.pass_context
+def compare(ctx: click.Context, code: str, schedule: Path) -> None:
+    """Say what a new schedule document changes about a registered type."""
+    incoming = load_schedule(schedule)
+    with opened_book(ctx) as book:
+        registered = fleet.get_type(book.connection, code)
+    found = differences(registered, incoming)
+    if not found:
+        click.echo(f"{schedule.name} says the same as the registered {registered.code}")
+        return
+    for change in found:
+        click.echo(change.describe())
+    click.echo(f"{len(found)} difference(s)")
 
 
 @group.command("remove")

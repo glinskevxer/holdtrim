@@ -103,3 +103,25 @@ def test_a_type_can_be_removed(runner: CliRunner, book: Path, schedule: Path) ->
 
 def test_the_group_is_registered_under_its_name() -> None:
     assert cli.commands["fleet"] is fleetcmd.group
+
+
+def test_the_same_schedule_compares_equal(runner: CliRunner, book: Path, schedule: Path) -> None:
+    prepared(runner, book, schedule)
+    result = run(runner, book, "fleet", "compare", "AT7F", str(schedule))
+    assert "says the same as the registered AT7F" in result.output
+
+
+def test_a_changed_schedule_says_what_moved(
+    runner: CliRunner, book: Path, schedule: Path, tmp_path: Path
+) -> None:
+    prepared(runner, book, schedule)
+    changed = tmp_path / "at7f-2.json"
+    changed.write_text(
+        schedule.read_text(encoding="utf-8").replace(
+            '"max_zero_fuel": 20800', '"max_zero_fuel": 21000'
+        ),
+        encoding="utf-8",
+    )
+    result = run(runner, book, "fleet", "compare", "AT7F", str(changed))
+    assert "max_zero_fuel: 20800 became 21000" in result.output
+    assert "1 difference(s)" in result.output
