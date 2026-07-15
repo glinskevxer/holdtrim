@@ -59,11 +59,7 @@ class Trail:
 def gather(connection: sqlite3.Connection, flight_key: str) -> Trail:
     """Read everything the book holds about a flight."""
     file = Office(connection=connection).flight(flight_key)
-    moved = tuple(
-        entry.describe()
-        for entry in movements.listing(connection)
-        if entry.flight_key == flight_key
-    )
+    moved = tuple(entry.describe() for entry in movements.for_flight(connection, flight_key))
     return Trail(file=file, issued=tuple(sheets.editions(connection, flight_key)), moved=moved)
 
 

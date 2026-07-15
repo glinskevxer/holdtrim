@@ -326,6 +326,14 @@ MIGRATIONS: tuple[Migration, ...] = (
             """,
         ),
     ),
+    Migration(
+        version=14,
+        name="indexes the reports needed",
+        statements=(
+            "CREATE INDEX sector_by_origin ON sector (origin, day)",
+            "CREATE INDEX uld_movement_by_flight ON uld_movement (flight_key, day)",
+        ),
+    ),
 )
 
 

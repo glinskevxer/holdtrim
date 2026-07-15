@@ -1,5 +1,5 @@
 -- The shape of the book after every migration.
--- Written by python -m holdtrim.tools.schema_dump at schema 13.
+-- Written by python -m holdtrim.tools.schema_dump at schema 14.
 
 CREATE INDEX consignment_by_route ON consignment (origin, destination, ready_on);
 CREATE INDEX dangerous_goods_by_awb ON dangerous_goods (awb, un_number);
@@ -7,10 +7,12 @@ CREATE INDEX hold_position_by_type ON hold_position (type_code, ordinal);
 CREATE INDEX loadsheet_by_day ON loadsheet (issued_on);
 CREATE INDEX plan_assignment_by_uld ON plan_assignment (uld);
 CREATE INDEX sector_by_day ON sector (day, carrier, number);
+CREATE INDEX sector_by_origin ON sector (origin, day);
 CREATE INDEX sector_by_tail ON sector (registration, day);
 CREATE INDEX station_by_name ON station (name);
 CREATE INDEX tail_by_type ON tail (type_code);
 CREATE INDEX uld_by_station ON uld (at_station, type_code);
+CREATE INDEX uld_movement_by_flight ON uld_movement (flight_key, day);
 CREATE INDEX uld_movement_by_station ON uld_movement (station, day);
 CREATE INDEX uld_movement_by_uld ON uld_movement (uld, day);
 CREATE TABLE aircraft_type ( code TEXT PRIMARY KEY, name TEXT NOT NULL, max_ramp INTEGER NOT NULL, max_takeoff INTEGER NOT NULL, max_landing INTEGER NOT NULL, max_zero_fuel INTEGER NOT NULL, reference_arm TEXT NOT NULL, lemac TEXT NOT NULL, mac_length TEXT NOT NULL, index_constant TEXT NOT NULL, index_reference TEXT NOT NULL, empty_weight INTEGER NOT NULL DEFAULT 0 );

@@ -154,6 +154,21 @@ def book_indexes(ctx: click.Context) -> None:
             click.echo(name)
 
 
+@book.command("plans")
+@click.pass_context
+def book_plans(ctx: click.Context) -> None:
+    """How sqlite says it will answer the queries the reports lean on."""
+    with opened_book(ctx) as opened:
+        maintenance.analyse(opened.connection)
+        for name, statement in sorted(maintenance.WATCHED_QUERIES.items()):
+            click.echo(name)
+            for line in maintenance.query_plan(opened.connection, statement):
+                click.echo(f"  {line}")
+        scanned = maintenance.scans(opened.connection)
+    if scanned:
+        click.echo(f"{len(scanned)} query(s) would read a whole table")
+
+
 @book.command("tidy")
 @click.pass_context
 def book_tidy(ctx: click.Context) -> None:

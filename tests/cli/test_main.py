@@ -153,6 +153,13 @@ def test_the_indexes_list_by_name(runner: CliRunner, book: Path) -> None:
     assert "station_by_name" in run(runner, book, "book", "indexes").output
 
 
+def test_the_query_plans_print(runner: CliRunner, book: Path) -> None:
+    run(runner, book, "init")
+    result = run(runner, book, "book", "plans")
+    assert "departures from a station" in result.output
+    assert "sector" in result.output
+
+
 def test_tidying_leaves_the_book_sound(runner: CliRunner, book: Path) -> None:
     run(runner, book, "init")
     assert "tidied" in run(runner, book, "book", "tidy").output

@@ -119,6 +119,43 @@ def prune(connection: sqlite3.Connection, before: date) -> tuple[Pruned, ...]:
     return taken
 
 
+WATCHED_QUERIES = {
+    "departures from a station": (
+        "SELECT key FROM sector WHERE origin = 'BLL' AND day = '2025-05-12'"
+    ),
+    "movements on a flight": (
+        "SELECT id FROM uld_movement WHERE flight_key = 'QH412/2025-05-12' ORDER BY day"
+    ),
+    "movements of a device": ("SELECT id FROM uld_movement WHERE uld = 'PMC12345QH' ORDER BY day"),
+    "cargo on a sector": (
+        "SELECT awb FROM consignment WHERE origin = 'BLL' AND destination = 'LGG'"
+    ),
+    "devices at a station": "SELECT code FROM uld WHERE at_station = 'BLL'",
+}
+
+
+def query_plan(connection: sqlite3.Connection, statement: str) -> list[str]:
+    """What sqlite says it will do to answer a statement."""
+    found = rows(connection, f"EXPLAIN QUERY PLAN {statement}")
+    return [str(row["detail"]) for row in found]
+
+
+def scans(connection: sqlite3.Connection) -> dict[str, list[str]]:
+    """The watched queries sqlite would answer by reading a whole table.
+
+    A scan is not always wrong. On a book with forty rows in it nothing else
+    would be faster, and sqlite knows that. It is worth watching because the
+    book that matters is the one with two seasons in it, and by then nobody is
+    looking.
+    """
+    found = {}
+    for name, statement in sorted(WATCHED_QUERIES.items()):
+        plan = query_plan(connection, statement)
+        if any(line.startswith("SCAN") for line in plan):
+            found[name] = plan
+    return found
+
+
 def index_names(connection: sqlite3.Connection) -> list[str]:
     """Every index in the book, in name order."""
     found = rows(

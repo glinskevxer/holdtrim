@@ -37,6 +37,10 @@ Read the book over for what the foreign keys cannot catch.
 
 Every index the book carries.
 
+### `holdtrim book plans`
+
+How sqlite says it will answer the queries the reports lean on.
+
 ### `holdtrim book prune`
 
 Take old flights and their movements out of the book.

@@ -73,6 +73,33 @@ def test_the_indexes_come_back_in_name_order(conn: sqlite3.Connection) -> None:
     assert names == sorted(names)
 
 
+def test_the_reports_have_the_indexes_they_read_through(conn: sqlite3.Connection) -> None:
+    names = maintenance.index_names(conn)
+    assert "sector_by_origin" in names
+    assert "uld_movement_by_flight" in names
+
+
+def test_a_query_plan_reads_back(conn: sqlite3.Connection) -> None:
+    plan = maintenance.query_plan(conn, "SELECT code FROM station WHERE code = 'BLL'")
+    assert plan
+    assert any("station" in line for line in plan)
+
+
+def test_every_watched_query_has_a_plan(conn: sqlite3.Connection) -> None:
+    for statement in maintenance.WATCHED_QUERIES.values():
+        assert maintenance.query_plan(conn, statement)
+
+
+def test_the_watched_queries_use_their_indexes(conn: sqlite3.Connection) -> None:
+    maintenance.analyse(conn)
+    assert maintenance.scans(conn) == {}
+
+
+def test_a_query_with_no_index_is_reported_as_a_scan(conn: sqlite3.Connection) -> None:
+    plan = maintenance.query_plan(conn, "SELECT name FROM station WHERE elevation_feet > 100")
+    assert any(line.startswith("SCAN") for line in plan)
+
+
 def test_a_dry_run_says_what_would_go_and_takes_nothing(conn: sqlite3.Connection) -> None:
     consignments.add(conn, waybill(1234567, date(2024, 1, 2)))
     would = maintenance.would_prune(conn, date(2025, 1, 1))

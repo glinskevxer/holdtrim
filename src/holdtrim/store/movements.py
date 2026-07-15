@@ -91,6 +91,21 @@ def at_station(
     return [_movement(row) for row in found]
 
 
+def for_flight(connection: sqlite3.Connection, flight_key: str) -> list[Movement]:
+    """Everything that moved on one flight.
+
+    This used to be done by reading the whole log and filtering in Python,
+    which is fine for a season and not fine for a book that has been worked for
+    two. There is an index on the flight now.
+    """
+    found = rows(
+        connection,
+        f"SELECT {COLUMNS} FROM uld_movement WHERE flight_key = ? ORDER BY day, id",
+        (flight_key,),
+    )
+    return [_movement(row) for row in found]
+
+
 def balance(connection: sqlite3.Connection, station: str, on: date) -> dict[str, int]:
     """How many of each base size the log says a station holds on a day."""
     held: dict[str, int] = {}

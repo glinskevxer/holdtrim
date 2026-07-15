@@ -87,6 +87,18 @@ def test_a_station_log_narrows_by_day(conn: sqlite3.Connection) -> None:
     assert [m.uld.serial for m in found] == ["12346"]
 
 
+def test_everything_on_one_flight_comes_back(conn: sqlite3.Connection) -> None:
+    movements.record(conn, moved(flight_key="QH412/2025-05-12"))
+    movements.record(conn, moved(code="PMC12346QH"))
+    found = movements.for_flight(conn, "QH412/2025-05-12")
+    assert [m.uld.serial for m in found] == ["12345"]
+
+
+def test_a_flight_with_nothing_logged_comes_back_empty(conn: sqlite3.Connection) -> None:
+    movements.record(conn, moved())
+    assert movements.for_flight(conn, "QH999/2025-05-12") == []
+
+
 def test_the_balance_counts_arrivals_less_departures(conn: sqlite3.Connection) -> None:
     movements.record(conn, moved(code="PMC12345QH"))
     movements.record(conn, moved(code="PMC12346QH"))
