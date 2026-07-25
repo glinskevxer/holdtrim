@@ -188,3 +188,27 @@ def test_a_waybill_ready_too_late_is_refused(runner: CliRunner, flight_book: Pat
     result = run(runner, flight_book, "cargo", "accept", "125-12345675", "QH412", "2025-05-12")
     assert "ready 2 day(s) after" in result.output
     assert result.exit_code == 6
+
+
+def test_a_waybill_can_be_reweighed(runner: CliRunner, book: Path) -> None:
+    prepared(runner, book)
+    booked(runner, book)
+    result = run(runner, book, "cargo", "reweigh", "125-12345675", "--weight", "1300")
+    assert "1240 kg became 1300 kg" in result.output
+    assert "60 kg heavier" in result.output
+
+
+def test_a_large_correction_is_reported(runner: CliRunner, book: Path) -> None:
+    prepared(runner, book)
+    booked(runner, book)
+    result = run(runner, book, "cargo", "reweigh", "125-12345675", "--weight", "400")
+    assert "check the units" in result.output
+
+
+def test_a_reweighed_waybill_reads_back_its_new_weight(runner: CliRunner, book: Path) -> None:
+    prepared(runner, book)
+    booked(runner, book)
+    run(runner, book, "cargo", "reweigh", "125-12345675", "--weight", "1300", "--pieces", "9")
+    result = run(runner, book, "cargo", "show", "125-12345675")
+    assert "gross weight 1300 kg" in result.output
+    assert "pieces 9" in result.output

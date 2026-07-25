@@ -119,6 +119,17 @@ Take a waybill off file.
 
 Arguments: `awb`
 
+### `holdtrim cargo reweigh`
+
+Correct a gross weight against what the scales say.
+
+Arguments: `awb`
+
+| option | what it does |
+| --- | --- |
+| `--weight` | What the scales say. |
+| `--pieces` | A corrected piece count. |
+
 ### `holdtrim cargo show`
 
 One waybill in full.
@@ -847,6 +858,16 @@ Arguments: `code`, `station`, `direction`
 Take a device off the register.
 
 Arguments: `code`
+
+### `holdtrim uld retare`
+
+Correct a tare weight, which is dead weight nobody pays for.
+
+Arguments: `code`
+
+| option | what it does |
+| --- | --- |
+| `--tare` | What the empty device weighs. |
 
 ### `holdtrim uld show`
 

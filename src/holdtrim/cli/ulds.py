@@ -6,6 +6,8 @@ from dataclasses import replace
 
 import click
 
+from holdtrim.cargo.reweigh import Correction
+from holdtrim.cargo.reweigh import check as reweigh_check
 from holdtrim.cli.common import echo_table, opened_book, parse_day
 from holdtrim.model.movement import DIRECTIONS, STATES, movement
 from holdtrim.model.uld import CONDITIONS, CONTOURS, uld
@@ -231,6 +233,21 @@ def condition(ctx: click.Context, code: str, state: str) -> None:
         changed = replace(device, condition=state)
         ulds.save(book.connection, changed)
     click.echo(f"{changed.code} is now {state}")
+
+
+@group.command("retare")
+@click.argument("code")
+@click.option("--tare", type=int, required=True, help="What the empty device weighs.")
+@click.pass_context
+def retare(ctx: click.Context, code: str, tare: int) -> None:
+    """Correct a tare weight, which is dead weight nobody pays for."""
+    with opened_book(ctx) as book:
+        device = ulds.get(book.connection, code)
+        correction = Correction(what=device.code.formatted(), was=device.tare, now=tare)
+        ulds.save(book.connection, replace(device, tare=tare))
+    click.echo(correction.describe())
+    for finding in reweigh_check(correction):
+        click.echo(f"{finding.severity} {finding.describe()}")
 
 
 @group.command("stock")

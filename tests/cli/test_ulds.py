@@ -164,3 +164,18 @@ def test_a_device_can_come_off_the_register(runner: CliRunner, book: Path) -> No
 
 def test_the_group_is_registered_under_its_name() -> None:
     assert cli.commands["uld"] is ulds.group
+
+
+def test_a_device_can_be_retared(runner: CliRunner, book: Path) -> None:
+    run(runner, book, "init")
+    added(runner, book, at="BLL")
+    result = run(runner, book, "uld", "retare", "PMC12345QH", "--tare", "118")
+    assert "110 kg became 118 kg" in result.output
+
+
+def test_a_retared_device_reads_back_its_new_capacity(runner: CliRunner, book: Path) -> None:
+    run(runner, book, "init")
+    added(runner, book, at="BLL")
+    run(runner, book, "uld", "retare", "PMC12345QH", "--tare", "118")
+    result = run(runner, book, "uld", "show", "PMC12345QH")
+    assert "payload capacity 4508 kg" in result.output

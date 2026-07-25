@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from decimal import Decimal
 
 import click
@@ -9,6 +10,8 @@ import click
 from holdtrim.cargo import handling
 from holdtrim.cargo.acceptance import acceptable, check
 from holdtrim.cargo.buildup import build
+from holdtrim.cargo.reweigh import Correction
+from holdtrim.cargo.reweigh import check as reweigh_check
 from holdtrim.cli.common import echo_table, opened_book, parse_day
 from holdtrim.errors import DataError
 from holdtrim.ids import parse_awb
@@ -159,6 +162,27 @@ def build_up(ctx: click.Context, code: str, waybills: tuple[str, ...]) -> None:
     click.echo(f"stackable {'yes' if made.stackable else 'no'}")
     click.echo(f"dangerous goods {'yes' if made.dangerous else 'no'}")
     click.echo(f"cargo aircraft only {'yes' if made.cargo_aircraft_only else 'no'}")
+
+
+@group.command("reweigh")
+@click.argument("awb")
+@click.option("--weight", type=int, required=True, help="What the scales say.")
+@click.option("--pieces", type=int, default=None, help="A corrected piece count.")
+@click.pass_context
+def reweigh(ctx: click.Context, awb: str, weight: int, pieces: int | None) -> None:
+    """Correct a gross weight against what the scales say."""
+    with opened_book(ctx) as opened:
+        consignment = consignments.get(opened.connection, awb)
+        correction = Correction(what=str(consignment.awb), was=consignment.gross_weight, now=weight)
+        corrected = replace(
+            consignment,
+            gross_weight=weight,
+            pieces=consignment.pieces if pieces is None else pieces,
+        )
+        consignments.save(opened.connection, corrected)
+    click.echo(correction.describe())
+    for finding in reweigh_check(correction):
+        click.echo(f"{finding.severity} {finding.describe()}")
 
 
 @group.command("accept")
