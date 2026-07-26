@@ -8,7 +8,7 @@ import click
 
 from holdtrim.cli.common import echo_table, opened_book, parse_day
 from holdtrim.errors import DataError
-from holdtrim.report import audit, capacity, handover, season, stock, uldflow
+from holdtrim.report import audit, capacity, exceptions, handover, season, stock, uldflow
 from holdtrim.store import export, flights, importer, settings
 
 
@@ -202,6 +202,20 @@ def idle_report(ctx: click.Context, on: str, days: int) -> None:
         [[entry.uld, entry.station, entry.since.isoformat(), str(entry.days)] for entry in found],
         empty=f"nothing has been standing more than {days} days on {day.isoformat()}",
     )
+
+
+@group.command("exceptions")
+@click.option("--on", required=True, help="The day to read the programme for.")
+@click.pass_context
+def exceptions_report(ctx: click.Context, on: str) -> None:
+    """Everything standing between a day's flights and going."""
+    day = parse_day(on)
+    with opened_book(ctx) as book:
+        report = exceptions.against(book.connection, day)
+    for line in exceptions.worst_first(report):
+        click.echo(line)
+    if exceptions.blocked(report):
+        raise SystemExit(6)
 
 
 @group.command("export")

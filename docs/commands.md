@@ -516,6 +516,14 @@ Arguments: `station`
 | --- | --- |
 | `--on` | The day to compare the two records on. |
 
+### `holdtrim report exceptions`
+
+Everything standing between a day's flights and going.
+
+| option | what it does |
+| --- | --- |
+| `--on` | The day to read the programme for. |
+
 ### `holdtrim report export`
 
 Write the whole book out as CSV.

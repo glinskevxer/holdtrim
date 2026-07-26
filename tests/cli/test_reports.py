@@ -189,3 +189,17 @@ def test_the_idle_report_lists_what_has_not_moved(runner: CliRunner, flight_book
 def test_nothing_idle_says_so(runner: CliRunner, flight_book: Path) -> None:
     result = run(runner, flight_book, "report", "idle", "--on", "2025-05-20")
     assert "nothing has been standing more than 14 days" in result.output
+
+
+def test_the_exceptions_report_names_what_is_outstanding(
+    runner: CliRunner, flight_book: Path
+) -> None:
+    planned(runner, flight_book)
+    result = run(runner, flight_book, "report", "exceptions", "--on", "2025-05-12")
+    assert "QH412/12" in result.output
+    assert result.exit_code == 6
+
+
+def test_a_day_with_nothing_outstanding_says_so(runner: CliRunner, flight_book: Path) -> None:
+    result = run(runner, flight_book, "report", "exceptions", "--on", "2024-01-01")
+    assert "nothing is outstanding" in result.output
