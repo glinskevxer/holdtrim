@@ -4,6 +4,7 @@ import pytest
 
 from holdtrim.tools import check_layers
 from holdtrim.tools.check_layers import imports, layer_of, problems
+from holdtrim.tools.sources import PACKAGE
 
 
 def test_nothing_in_the_package_imports_upwards() -> None:
@@ -53,3 +54,34 @@ def test_the_imports_of_a_file_are_found() -> None:
 
 def test_an_import_from_outside_the_package_is_ignored() -> None:
     assert imports(ast.parse("import json\nfrom pathlib import Path\n")) == []
+
+
+def test_a_module_in_no_layer_is_reported(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(check_layers, "package_files", lambda: [PACKAGE / "x.py"])
+    monkeypatch.setattr(check_layers, "module_name", lambda _path: "elsewhere.entirely")
+    monkeypatch.setattr(check_layers, "where", lambda path: path.name)
+    assert "is in no layer this check knows about" in problems()[0]
+
+
+def test_an_import_of_something_in_no_layer_is_reported(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: object
+) -> None:
+    import ast
+
+    monkeypatch.setattr(check_layers, "package_files", lambda: [PACKAGE / "x.py"])
+    monkeypatch.setattr(check_layers, "module_name", lambda _path: "holdtrim.units")
+    monkeypatch.setattr(check_layers, "where", lambda path: path.name)
+    monkeypatch.setattr(check_layers, "parsed", lambda _path: ast.parse(""))
+    monkeypatch.setattr(check_layers, "imports", lambda _tree: ["elsewhere.entirely"])
+    assert "which is in no layer" in problems()[0]
+
+
+def test_an_import_upwards_is_reported(monkeypatch: pytest.MonkeyPatch) -> None:
+    import ast
+
+    monkeypatch.setattr(check_layers, "package_files", lambda: [PACKAGE / "x.py"])
+    monkeypatch.setattr(check_layers, "module_name", lambda _path: "holdtrim.units")
+    monkeypatch.setattr(check_layers, "where", lambda path: path.name)
+    monkeypatch.setattr(check_layers, "parsed", lambda _path: ast.parse(""))
+    monkeypatch.setattr(check_layers, "imports", lambda _tree: ["holdtrim.cli.main"])
+    assert "is at layer 0 and imports holdtrim.cli.main" in problems()[0]

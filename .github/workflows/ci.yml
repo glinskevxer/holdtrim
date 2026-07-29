@@ -74,7 +74,7 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: python -m pip install -e ".[dev]" -c constraints.txt
       - run: python -m pytest -q --cov --cov-report=json --cov-report=term-missing
-      - run: python -m holdtrim.tools.coverage_gate --floor 97 --file-floor 85 --worst 8
+      - run: python -m holdtrim.tools.coverage_gate --floor 98 --file-floor 90 --worst 8
       - uses: actions/upload-artifact@v4
         if: always()
         with:

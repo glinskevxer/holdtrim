@@ -72,3 +72,16 @@ def test_the_rendered_message_reads_as_a_cpm() -> None:
 
 def test_no_line_of_the_message_is_too_long_for_the_wire() -> None:
     assert built(loaded()).over_width == ()
+
+
+def test_a_flight_with_every_position_used_lists_no_empties() -> None:
+    plan = LoadPlan(
+        flight_key=KEY,
+        assignments=(
+            Assignment(position="11P", weight=2000, uld="PMC12345QH", destination="LGG"),
+            Assignment(position="21P", weight=900, uld="PMC12346QH", destination="LGG"),
+            Assignment(position="51", weight=300, destination="LGG"),
+        ),
+    )
+    assert cpm.empty_positions(sheet(plan=plan)) == ()
+    assert not any(line.startswith("NIL") for line in cpm.body(sheet(plan=plan)))

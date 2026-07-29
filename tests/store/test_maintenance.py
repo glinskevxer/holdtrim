@@ -141,3 +141,13 @@ def test_a_pruned_entry_describes_itself(conn: sqlite3.Connection) -> None:
     consignments.add(conn, waybill(1234567, date(2024, 1, 2)))
     entry = maintenance.would_prune(conn, date(2025, 1, 1))[0]
     assert entry.describe() == "consignment 1 row(s) before 2025-01-01"
+
+
+def test_a_table_that_is_not_in_the_book_is_not_pruned(conn: sqlite3.Connection) -> None:
+    conn.execute("DROP TABLE loadsheet")
+    assert maintenance.would_prune(conn, date(2025, 1, 1)) == ()
+
+
+def test_the_sizes_leave_out_nothing_that_is_there(conn: sqlite3.Connection) -> None:
+    tables = {size.table for size in maintenance.sizes(conn)}
+    assert "setting" in tables

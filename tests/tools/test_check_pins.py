@@ -43,3 +43,13 @@ def test_a_version_that_does_not_match_is_found(monkeypatch: pytest.MonkeyPatch)
 def test_a_loose_constraint_is_found(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(check_pins, "unpinned", lambda: ["click>=8"])
     assert "does not pin 'click>=8' exactly" in problems()[0]
+
+
+def test_the_project_file_is_where_the_check_looks() -> None:
+    assert check_pins.PROJECT.exists()
+    assert "click" in direct()
+
+
+def test_the_constraints_file_is_where_the_check_looks() -> None:
+    assert check_pins.CONSTRAINTS.exists()
+    assert "click" in constrained()

@@ -168,3 +168,14 @@ def test_connect_is_available_for_callers_that_close_themselves(book: Path) -> N
         assert scalar(conn, "SELECT 1") == 1
     finally:
         conn.close()
+
+
+def test_a_scalar_of_nothing_counts_as_zero(book: Path) -> None:
+    with opened(book) as conn:
+        conn.execute("CREATE TABLE t (a INTEGER)")
+        assert scalar_int(conn, "SELECT max(a) FROM t") == 0
+
+
+def test_the_pragmas_this_package_assumes_are_on(book: Path) -> None:
+    with opened(book) as conn:
+        assert scalar(conn, "PRAGMA journal_mode") == "wal"
