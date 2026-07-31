@@ -62,11 +62,17 @@ def init(ctx: click.Context) -> None:
 
 
 @cli.command()
+@click.option("--long", "at_length", is_flag=True, help="List the command groups as well.")
 @click.pass_context
-def about(ctx: click.Context) -> None:
+def about(ctx: click.Context, at_length: bool) -> None:
     """Say what this build is and what book it is pointed at."""
     click.echo(f"holdtrim {__version__}")
     click.echo(f"book {settings(ctx).book}")
+    if not at_length:
+        return
+    for name, command in sorted(cli.commands.items()):
+        if isinstance(command, click.Group):
+            click.echo(f"{name}: {(command.help or '').strip().splitlines()[0]}")
 
 
 @cli.group()

@@ -15,6 +15,10 @@ Load control for a regional freighter operation.
 
 Say what this build is and what book it is pointed at.
 
+| option | what it does |
+| --- | --- |
+| `--long` | List the command groups as well. |
+
 ## `holdtrim book`
 
 Look after the book itself.

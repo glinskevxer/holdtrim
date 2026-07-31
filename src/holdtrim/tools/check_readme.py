@@ -1,11 +1,15 @@
-"""The README describes this package and not a previous one.
+"""The documents describe this package and not a previous one.
 
 Two things in a README go stale without anybody noticing: a command that has
-been renamed, and a path that has been moved. Both are quoted in the README as
-if they were true, and both are checkable.
+been renamed, and a path that has been moved. Both are quoted as if they were
+true, and both are checkable.
 
-Prose is not checked and should not be. This looks only at the indented blocks,
-which is where the commands and the paths are.
+The operating guide has a third way of going stale, which is a whole command
+group that is added and never mentioned. A group nobody documented is a group
+nobody uses, so it is checked the other way round: every group has to appear.
+
+Prose is not checked and should not be. The commands and paths are read out of
+the indented blocks, and the groups out of the whole guide.
 """
 
 from __future__ import annotations
@@ -13,10 +17,14 @@ from __future__ import annotations
 import shlex
 import sys
 
+import click
+
+from holdtrim.cli.main import cli
 from holdtrim.tools.check_workflow import resolve
 from holdtrim.tools.sources import ROOT, report
 
 README = ROOT / "README.md"
+OPERATING = ROOT / "docs" / "operating.md"
 CONSOLE_SCRIPT = "holdtrim"
 INDENT = "    "
 
@@ -57,8 +65,20 @@ def paths(text: str) -> list[str]:
     return found
 
 
+def undocumented_groups() -> list[str]:
+    """Every command group the operating guide never mentions."""
+    if not OPERATING.exists():
+        return [f"there is no operating guide at {OPERATING}"]
+    text = OPERATING.read_text(encoding="utf-8")
+    return [
+        f"the operating guide never mentions the {name} group"
+        for name, command in sorted(cli.commands.items())
+        if isinstance(command, click.Group) and f"`{name}` group" not in text
+    ]
+
+
 def problems() -> list[str]:
-    """Every command or path the README names that is not there."""
+    """Every command or path the documents name that is not there."""
     if not README.exists():
         return [f"there is no README at {README}"]
     text = README.read_text(encoding="utf-8")
@@ -70,6 +90,7 @@ def problems() -> list[str]:
     for path in paths(text):
         if not (ROOT / path).exists():
             found.append(f"the README names {path}, which is not there")
+    found.extend(undocumented_groups())
     return found
 
 

@@ -43,6 +43,16 @@ def test_about_names_the_build_and_the_book(runner: CliRunner, book: Path) -> No
     assert str(book) in result.output
 
 
+def test_about_at_length_lists_the_command_groups(runner: CliRunner, book: Path) -> None:
+    result = run(runner, book, "about", "--long")
+    assert "flight:" in result.output
+    assert "danger:" in result.output
+
+
+def test_about_on_its_own_lists_no_groups(runner: CliRunner, book: Path) -> None:
+    assert "flight:" not in run(runner, book, "about").output
+
+
 def test_the_version_option_prints_the_version(runner: CliRunner) -> None:
     result = runner.invoke(cli, ["--version"])
     assert __version__ in result.output
@@ -194,3 +204,8 @@ def test_the_doctor_reports_an_orphan_movement(runner: CliRunner, book: Path) ->
     result = run(runner, book, "book", "doctor")
     assert "not on the ULD register" in result.output
     assert result.exit_code == 7
+
+
+def test_about_at_length_says_what_each_group_is_for(runner: CliRunner, book: Path) -> None:
+    result = run(runner, book, "about", "--long")
+    assert "the airports this operation works" in result.output.lower()

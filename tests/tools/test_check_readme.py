@@ -1,7 +1,13 @@
 import pytest
 
 from holdtrim.tools import check_readme
-from holdtrim.tools.check_readme import blocks, commands, paths, problems
+from holdtrim.tools.check_readme import (
+    blocks,
+    commands,
+    paths,
+    problems,
+    undocumented_groups,
+)
 
 
 def readme() -> str:
@@ -49,6 +55,29 @@ def test_a_path_that_is_gone_is_reported(monkeypatch: pytest.MonkeyPatch) -> Non
     assert "which is not there" in problems()[0]
 
 
+def test_every_group_is_in_the_operating_guide() -> None:
+    assert undocumented_groups() == []
+
+
+def test_a_group_the_guide_leaves_out_is_reported(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(check_readme, "OPERATING", check_readme.OPERATING.parent / "nothing.md")
+    assert "no operating guide" in undocumented_groups()[0]
+
+
 def test_a_missing_readme_is_reported(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(check_readme, "README", check_readme.README.parent / "nothing.md")
     assert "there is no README" in problems()[0]
+
+
+def test_the_guide_names_every_group_it_has_to() -> None:
+    text = check_readme.OPERATING.read_text(encoding="utf-8")
+    for name in ("book", "cargo", "danger", "flight", "plan", "sheet", "message", "report"):
+        assert f"`{name}` group" in text
+
+
+def test_an_option_is_not_read_as_a_path() -> None:
+    assert paths("    --book night.sqlite3 station list\n") == []
+
+
+def test_a_book_file_is_not_read_as_a_path() -> None:
+    assert paths("    night.sqlite3 is the book\n") == []
