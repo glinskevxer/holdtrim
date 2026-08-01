@@ -121,6 +121,31 @@ def test_releasing_an_empty_position_is_refused() -> None:
         plan(pallet()).release("21P")
 
 
+def test_moving_takes_the_device_and_the_destination_with_it() -> None:
+    moved = plan(pallet()).move("11P", "21p")
+    assert moved.positions == ("21P",)
+    assert moved.at("21P").uld == "PMC12345QH"
+    assert moved.at("21P").destination == "LGG"
+
+
+def test_moving_into_a_taken_position_is_refused() -> None:
+    loaded = plan(pallet(), pallet(position="21P", uld="PMC12346QH"))
+    with pytest.raises(RuleError, match="already holds PMC12346QH"):
+        loaded.move("11P", "21P")
+
+
+def test_moving_something_that_is_not_there_is_refused() -> None:
+    with pytest.raises(NotFoundError, match="nothing is planned for position 31P"):
+        plan(pallet()).move("31P", "21P")
+
+
+def test_moving_leaves_the_rest_of_the_plan_alone() -> None:
+    loaded = plan(pallet(), Assignment(position="51", weight=300))
+    moved = loaded.move("11P", "21P")
+    assert moved.at("51").weight == 300
+    assert moved.payload == loaded.payload
+
+
 def test_reissuing_moves_the_edition_on_and_keeps_the_load() -> None:
     reissued = plan(pallet()).reissued()
     assert reissued.edition == 2

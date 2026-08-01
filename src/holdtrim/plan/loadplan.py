@@ -143,6 +143,24 @@ class LoadPlan:
         kept = tuple(a for a in self.assignments if a.position != wanted)
         return replace(self, assignments=kept)
 
+    def move(self, position: str, to: str) -> LoadPlan:
+        """Move whatever is in one position into another.
+
+        The device and the offload point travel with the load, which is the
+        whole reason this is not a release and an assign. Doing it in two steps
+        means retyping both, and retyping the destination is how a pallet ends
+        up planned for the wrong station.
+        """
+        held = self.at(position)
+        wanted = to.strip().upper()
+        if self.holds(wanted):
+            raise RuleError(f"position {wanted} already holds {self.at(wanted).uld or BULK}")
+        moved = replace(held, position=wanted)
+        kept = tuple(
+            moved if entry.position == held.position else entry for entry in self.assignments
+        )
+        return replace(self, assignments=kept)
+
     def reissued(self) -> LoadPlan:
         """The same plan at the next edition, which is what a change makes."""
         return replace(self, edition=self.edition + 1)

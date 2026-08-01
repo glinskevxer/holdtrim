@@ -455,6 +455,12 @@ Whether every device planned is the right shape for its position.
 
 Arguments: `designator`, `day`
 
+### `holdtrim plan move`
+
+Move a load from one position to another, device and all.
+
+Arguments: `designator`, `day`, `position`, `to`
+
 ### `holdtrim plan offload`
 
 Say what has to come off, and what it should be.

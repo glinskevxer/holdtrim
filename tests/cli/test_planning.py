@@ -63,6 +63,28 @@ def test_a_position_can_be_pulled_back_out(runner: CliRunner, flight_book: Path)
     assert "nothing is planned" in result.output
 
 
+def test_a_load_moves_between_positions(runner: CliRunner, flight_book: Path) -> None:
+    planned(runner, flight_book)
+    result = run(runner, flight_book, "plan", "move", "QH412", "2025-05-12", "11P", "21P")
+    assert "21P PMC12345QH 2000 kg for LGG" in result.output
+    assert "zero fuel index" in result.output
+
+
+def test_moving_into_a_taken_position_is_refused(runner: CliRunner, flight_book: Path) -> None:
+    planned(runner, flight_book, "11P", "2000")
+    planned(runner, flight_book, "21P", "900")
+    result = run(runner, flight_book, "plan", "move", "QH412", "2025-05-12", "11P", "21P")
+    assert result.exception is not None
+
+
+def test_moving_to_a_position_that_is_not_on_the_type_is_refused(
+    runner: CliRunner, flight_book: Path
+) -> None:
+    planned(runner, flight_book)
+    result = run(runner, flight_book, "plan", "move", "QH412", "2025-05-12", "11P", "99X")
+    assert result.exception is not None
+
+
 def test_a_legal_plan_passes_every_check(runner: CliRunner, flight_book: Path) -> None:
     planned(runner, flight_book)
     result = run(runner, flight_book, "plan", "check", "QH412", "2025-05-12")

@@ -99,6 +99,25 @@ def pull(ctx: click.Context, designator: str, day: str, position: str) -> None:
     click.echo(f"released {position.upper()}")
 
 
+@group.command("move")
+@click.argument("designator")
+@click.argument("day")
+@click.argument("position")
+@click.argument("to")
+@click.pass_context
+def move(ctx: click.Context, designator: str, day: str, position: str, to: str) -> None:
+    """Move a load from one position to another, device and all."""
+    with opened_book(ctx) as book:
+        file = Office(connection=book.connection).on(designator, parse_day(day))
+        file.kind.layout.position(to)
+        before = file.balance().zero_fuel.index
+        moved = file.plan.move(position, to)
+        plans.save(book.connection, moved)
+        after = Office(connection=book.connection).on(designator, parse_day(day)).balance()
+    click.echo(moved.at(to).describe())
+    click.echo(f"zero fuel index {before} became {after.zero_fuel.index}")
+
+
 @group.command("auto")
 @click.argument("designator")
 @click.argument("day")
