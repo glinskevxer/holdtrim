@@ -136,17 +136,18 @@ def test_the_office_finds_a_flight_by_designator_and_day(conn: sqlite3.Connectio
     assert office.on("qh412", date(2025, 5, 12)).key == KEY
 
 
-def test_the_office_reads_a_flight_once(conn: sqlite3.Connection) -> None:
+def test_the_office_reads_a_flight_fresh_every_time(conn: sqlite3.Connection) -> None:
     office = Office(connection=conn)
     first = office.flight(KEY)
-    assert office.flight(KEY) is first
-
-
-def test_forgetting_a_flight_reads_it_again(conn: sqlite3.Connection) -> None:
-    office = Office(connection=conn)
-    first = office.flight(KEY)
-    office.forget(KEY)
     assert office.flight(KEY) is not first
+    assert office.flight(KEY) == first
+
+
+def test_a_plan_written_between_two_reads_is_seen(conn: sqlite3.Connection) -> None:
+    office = Office(connection=conn)
+    assert office.flight(KEY).plan.empty
+    planned(conn)
+    assert office.flight(KEY).plan.payload == 2000
 
 
 def issue(conn: sqlite3.Connection) -> None:

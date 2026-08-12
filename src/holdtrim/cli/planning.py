@@ -13,6 +13,7 @@ from holdtrim.plan.contour import check as contour_check
 from holdtrim.plan.contour import tapered
 from holdtrim.plan.loadplan import Assignment
 from holdtrim.plan.offload import GENERAL, LEVELS, Candidate, for_balance
+from holdtrim.plan.room import best, everywhere
 from holdtrim.plan.sequence import as_planned, instruction, outside, suggested, unloading, walk
 from holdtrim.store import flights, plans, ulds
 
@@ -194,6 +195,25 @@ def offload(ctx: click.Context, designator: str, day: str, priorities: tuple[str
     if not made.enough:
         click.echo(f"still {made.short_by} kg over")
         raise SystemExit(6)
+
+
+@group.command("room")
+@click.argument("designator")
+@click.argument("day")
+@click.pass_context
+def room(ctx: click.Context, designator: str, day: str) -> None:
+    """How much more will go in each position with everything still legal."""
+    with opened_book(ctx) as book:
+        file = Office(connection=book.connection).on(designator, parse_day(day))
+        fuel = (file.sector.taxi_fuel, file.sector.trip_fuel, file.sector.takeoff_fuel)
+        report = everywhere(file.kind, file.tail, file.plan, fuel=fuel)
+    echo_table(
+        ["position", "holding", "room"],
+        [[entry.position, str(entry.holding), str(entry.spare)] for entry in report],
+        empty=f"{file.sector.reference} has no positions",
+    )
+    where = best(report)
+    click.echo(f"most room in {where}" if where else "nothing more will go anywhere")
 
 
 @group.command("sequence")

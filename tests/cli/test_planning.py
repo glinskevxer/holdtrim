@@ -235,3 +235,18 @@ def test_a_flight_with_no_devices_has_nothing_to_check(
 ) -> None:
     result = run(runner, flight_book, "plan", "contour", "QH412", "2025-05-12")
     assert "right shape for its position" in result.output
+
+
+def test_the_room_report_lists_every_position(runner: CliRunner, flight_book: Path) -> None:
+    planned(runner, flight_book)
+    result = run(runner, flight_book, "plan", "room", "QH412", "2025-05-12")
+    assert "11P" in result.output
+    assert "most room in" in result.output
+
+
+def test_a_flight_with_nowhere_to_put_anything_says_so(
+    runner: CliRunner, flight_book: Path
+) -> None:
+    planned(runner, flight_book, "11P", "3400")
+    result = run(runner, flight_book, "plan", "room", "QH412", "2025-05-12")
+    assert "nothing more will go anywhere" in result.output

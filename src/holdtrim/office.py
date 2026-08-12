@@ -10,7 +10,7 @@ one way to assemble them and this is it.
 from __future__ import annotations
 
 import sqlite3
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date
 
 from holdtrim.balance.limits import check
@@ -158,30 +158,27 @@ def may_depart(findings: tuple[Finding, ...]) -> bool:
 
 @dataclass
 class Office:
-    """A book, and the flights read out of it."""
+    """A book, and the flights read out of it.
+
+    There was a cache here and it is gone. Every caller reads each flight once,
+    so it never saved a query, and a cached flight file in a process that also
+    writes is a file that can quietly describe the plan as it was two commands
+    ago. A stale weight is worse than a slow one.
+    """
 
     connection: sqlite3.Connection
-    cache: dict[str, FlightFile] = field(default_factory=dict)
 
     def flight(self, key: str) -> FlightFile:
-        """One flight's whole file."""
-        if key in self.cache:
-            return self.cache[key]
+        """One flight's whole file, read fresh."""
         sector = flights.get(self.connection, key)
         tail = fleet.get_tail(self.connection, sector.registration)
         kind = fleet.get_type(self.connection, tail.type_code)
         plan = plans.get_or_start(self.connection, key)
-        file = FlightFile(sector=sector, tail=tail, kind=kind, plan=plan)
-        self.cache[key] = file
-        return file
+        return FlightFile(sector=sector, tail=tail, kind=kind, plan=plan)
 
     def on(self, designator: str, day: date) -> FlightFile:
         """One flight by designator and day."""
         return self.flight(flights.key_for(designator, day))
-
-    def forget(self, key: str) -> None:
-        """Drop a flight from the cache after it has been written to."""
-        self.cache.pop(key, None)
 
 
 def read(connection: sqlite3.Connection, key: str) -> FlightFile:

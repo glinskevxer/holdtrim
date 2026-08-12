@@ -489,6 +489,12 @@ Arguments: `designator`, `day`, `position`
 | `--uld` | The device, left out for loose cargo. |
 | `--to` | Where it comes off. |
 
+### `holdtrim plan room`
+
+How much more will go in each position with everything still legal.
+
+Arguments: `designator`, `day`
+
 ### `holdtrim plan sequence`
 
 The order to load in, checked step by step against the envelope.
