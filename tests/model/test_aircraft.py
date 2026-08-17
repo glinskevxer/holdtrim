@@ -86,6 +86,7 @@ def a_type(**changes: object) -> AircraftType:
             points=(
                 TrimPoint(percent_mac=Decimal("15.0"), setting=Decimal("5.5")),
                 TrimPoint(percent_mac=Decimal("35.0"), setting=Decimal("1.5")),
+                TrimPoint(percent_mac=Decimal("45.0"), setting=Decimal("-0.5")),
             )
         ),
     }

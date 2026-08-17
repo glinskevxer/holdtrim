@@ -90,6 +90,7 @@ def a_type(code: str = "AT7F") -> AircraftType:
                 TrimPoint(percent_mac=Decimal("15.0"), setting=Decimal("5.5")),
                 TrimPoint(percent_mac=Decimal("25.0"), setting=Decimal("3.5")),
                 TrimPoint(percent_mac=Decimal("35.0"), setting=Decimal("1.5")),
+                TrimPoint(percent_mac=Decimal("45.0"), setting=Decimal("-0.5")),
             )
         ),
         empty_weight=13100,

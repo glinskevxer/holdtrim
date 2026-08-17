@@ -86,6 +86,10 @@
     {
       "percent_mac": "35.0",
       "setting": "1.5"
+    },
+    {
+      "percent_mac": "45.0",
+      "setting": "-0.5"
     }
   ],
   "envelopes": {
