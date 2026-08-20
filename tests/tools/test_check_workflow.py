@@ -72,3 +72,15 @@ def test_a_walk_using_the_top_level_book_option_is_allowed() -> None:
 def test_a_missing_workflow_is_reported(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(check_workflow, "WORKFLOW", check_workflow.WORKFLOW.parent / "nowhere.yml")
     assert "there is no workflow" in problems()[0]
+
+
+def test_the_walk_covers_every_command_group() -> None:
+    text = walk_text()
+    for group in ("station", "fleet", "tail", "uld", "cargo", "danger", "flight"):
+        assert f'"$book" {group} ' in text
+
+
+def test_the_walk_covers_the_reports_and_the_book() -> None:
+    text = walk_text()
+    for group in ("plan", "sheet", "message", "report", "book", "setting"):
+        assert f'"$book" {group} ' in text

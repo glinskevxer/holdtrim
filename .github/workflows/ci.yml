@@ -129,7 +129,7 @@ jobs:
         run: |
           set -euo pipefail
           book=/tmp/walk.sqlite3
-          rm -f "$book"
+          rm -rf "$book" /tmp/walk-csv
           holdtrim --book "$book" init
           holdtrim --book "$book" station add BLL Billund --elevation 247
           holdtrim --book "$book" station add LGG Liege --elevation 659 --agent "Swissport"
@@ -162,6 +162,21 @@ jobs:
             --load PMC12345QH=2000 --load PMC12346QH=900
           holdtrim --book "$book" plan show QH412 2025-05-12
           holdtrim --book "$book" plan check QH412 2025-05-12
+          holdtrim --book "$book" plan sequence QH412 2025-05-12
+          holdtrim --book "$book" plan contour QH412 2025-05-12
+          holdtrim --book "$book" plan room QH412 2025-05-12
+          holdtrim --book "$book" plan offload QH412 2025-05-12
+          holdtrim --book "$book" danger declare 125-12345675 --un 1263 \
+            --name Paint --hazard 3 --packages 4 --quantity 5 --unit L --pg II
+          holdtrim --book "$book" danger list
+          holdtrim --book "$book" danger classes
+          holdtrim --book "$book" danger limits
+          holdtrim --book "$book" danger screen QH412 2025-05-12 \
+            --place 125-12345675=11P
+          holdtrim --book "$book" danger notoc QH412 2025-05-12 --by CI \
+            --place 125-12345675=11P
+          holdtrim --book "$book" setting list
+          holdtrim --book "$book" setting set lmc.tolerance 400
           holdtrim --book "$book" sheet findings QH412 2025-05-12
           holdtrim --book "$book" sheet print QH412 2025-05-12 --by "CI"
           holdtrim --book "$book" sheet summary QH412 2025-05-12
@@ -171,7 +186,26 @@ jobs:
             --off PMC12345QH/L --off PMC12346QH/L \
             --to LGGKLQH --from BLLLDQH --filed 121815
           holdtrim --book "$book" sheet issue QH412 2025-05-12 --by "CI"
+          holdtrim --book "$book" sheet history QH412 2025-05-12
+          holdtrim --book "$book" uld move PMC12345QH LGG --on 2025-05-12 \
+            --flight QH412 --state loaded
+          holdtrim --book "$book" uld log PMC12345QH
+          holdtrim --book "$book" flight depart QH412 2025-05-12
           holdtrim --book "$book" flight list --day 2025-05-12
+          holdtrim --book "$book" report day 2025-05-12
+          holdtrim --book "$book" report flight QH412 2025-05-12
+          holdtrim --book "$book" report handover BLL --on 2025-05-12
+          holdtrim --book "$book" report exceptions --on 2025-05-12
+          holdtrim --book "$book" report stock BLL
+          holdtrim --book "$book" report standing LGG --on 2025-05-30
+          holdtrim --book "$book" report flow --from 2025-05-01 --to 2025-05-31
+          holdtrim --book "$book" report idle --on 2025-05-30
+          holdtrim --book "$book" report period --from 2025-05-01 --to 2025-05-31
+          holdtrim --book "$book" report export /tmp/walk-csv
           holdtrim --book "$book" book counts
+          holdtrim --book "$book" book sizes
+          holdtrim --book "$book" book plans
+          holdtrim --book "$book" book doctor
+          holdtrim --book "$book" book tidy
           holdtrim --book "$book" book verify
-          holdtrim --book "$book" about
+          holdtrim --book "$book" about --long

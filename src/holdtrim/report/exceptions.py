@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from datetime import date
 
 from holdtrim.findings import Finding, stopping, watching
+from holdtrim.model.flight import CANCELLED, DEPARTED
 from holdtrim.office import Office, departure_checks
 from holdtrim.store import flights
 
@@ -50,11 +51,29 @@ class Against:
         )
 
 
+GONE = (DEPARTED, CANCELLED)
+
+
+def outstanding(connection: sqlite3.Connection, day: date) -> tuple[str, ...]:
+    """The flights on a day that anybody can still do anything about.
+
+    A flight that has gone is not outstanding, whatever is wrong with it. It
+    used to be on this list and it made the report exit non zero every night
+    after the last departure, which is the fastest way to teach a shift to stop
+    reading a report.
+    """
+    return tuple(
+        sector.key for sector in flights.on_day(connection, day) if sector.status not in GONE
+    )
+
+
 def against(connection: sqlite3.Connection, day: date) -> tuple[Against, ...]:
     """Every flight on a day that has anything against it, worst first."""
     office = Office(connection=connection)
     found = []
     for sector in flights.on_day(connection, day):
+        if sector.status in GONE:
+            continue
         file = office.flight(sector.key)
         findings = departure_checks(connection, file)
         if findings:

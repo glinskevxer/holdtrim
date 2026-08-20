@@ -125,6 +125,24 @@ def test_the_worst_flight_comes_first(conn: sqlite3.Connection) -> None:
     assert report[0].reference == "QH412/12"
 
 
+def test_a_flight_that_has_gone_is_not_outstanding(conn: sqlite3.Connection) -> None:
+    key = fly(conn)
+    flights.save(conn, replace(flights.get(conn, key), status="departed"))
+    assert exceptions.against(conn, DAY) == ()
+    assert exceptions.outstanding(conn, DAY) == ()
+
+
+def test_a_cancelled_flight_is_not_outstanding_either(conn: sqlite3.Connection) -> None:
+    key = fly(conn)
+    flights.save(conn, replace(flights.get(conn, key), status="cancelled"))
+    assert exceptions.outstanding(conn, DAY) == ()
+
+
+def test_a_flight_still_to_go_is_outstanding(conn: sqlite3.Connection) -> None:
+    key = fly(conn)
+    assert exceptions.outstanding(conn, DAY) == (key,)
+
+
 def test_the_blocked_flights_are_named(conn: sqlite3.Connection) -> None:
     fly(conn)
     assert exceptions.blocked(exceptions.against(conn, DAY)) == ("QH412/12",)
