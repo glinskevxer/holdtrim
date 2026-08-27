@@ -6,6 +6,6 @@ weight and balance, screen the dangerous goods, and issue the loadsheet and
 the teletype messages that follow it.
 """
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 
 __all__ = ["__version__"]

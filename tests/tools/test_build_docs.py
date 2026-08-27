@@ -61,3 +61,17 @@ def test_a_stale_reference_fails_the_check(
     out.write_text("out of date", encoding="utf-8")
     assert build_docs.main(["--check", "--out", str(out)]) == 1
     assert "out of date" in capsys.readouterr().out
+
+
+def test_the_help_text_is_indented_the_same_on_every_interpreter() -> None:
+    from holdtrim.cli.main import cli as tree
+
+    text = render()
+    assert "    Nothing is written." not in text
+    assert "Nothing is written." in text
+    assert tree.commands
+
+
+def test_a_multi_paragraph_help_keeps_its_paragraphs() -> None:
+    text = render()
+    assert "The edition is not asked for." in text

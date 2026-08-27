@@ -1,6 +1,6 @@
 # holdtrim commands
 
-Generated from the command line of holdtrim 0.1.0.
+Generated from the command line of holdtrim 1.0.0.
 Run `python -m holdtrim.tools.build_docs` to write this file again.
 
 ### `holdtrim`
@@ -97,9 +97,9 @@ Arguments: `awb`, `origin`, `destination`
 
 Build waybills into a device, in the order they are given.
 
-    Nothing is written. This is the check the warehouse runs before it starts
-    stacking, so that a device that will not take the load is found out about
-    on paper rather than on a scale.
+Nothing is written. This is the check the warehouse runs before it starts
+stacking, so that a device that will not take the load is found out about
+on paper rather than on a scale.
 
 Arguments: `code`
 
@@ -599,9 +599,9 @@ What a period came to, flights and kilograms and limits.
 
 What has been standing too long, and what it is costing.
 
-    The free days and the rate are policy, so they come off the settings unless
-    the caller asks for something else. A default written into the command is
-    how two reports end up disagreeing about the same station.
+The free days and the rate are policy, so they come off the settings unless
+the caller asks for something else. A default written into the command is
+how two reports end up disagreeing about the same station.
 
 Arguments: `station`
 
@@ -663,9 +663,9 @@ Arguments: `designator`, `day`
 
 Check the sheet, record it, close the flight, and hand it over.
 
-    The edition is not asked for. It follows what has already been issued for
-    this flight, because an edition number typed in by hand is an edition
-    number that eventually repeats.
+The edition is not asked for. It follows what has already been issued for
+this flight, because an edition number typed in by hand is an edition
+number that eventually repeats.
 
 Arguments: `designator`, `day`
 
@@ -852,9 +852,9 @@ Arguments: `code`
 
 Record a device somewhere else, and log both halves of the move.
 
-    A move is two facts, not one. It left somewhere and it arrived somewhere,
-    and a log that only carries the arrival cannot tell you when the station it
-    came from stopped being charged for it.
+A move is two facts, not one. It left somewhere and it arrived somewhere,
+and a log that only carries the arrival cannot tell you when the station it
+came from stopped being charged for it.
 
 Arguments: `code`, `station`
 
